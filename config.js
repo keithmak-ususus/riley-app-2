@@ -1,12 +1,13 @@
 // Paste your Firebase web app config here (Firebase console → Project settings → Your apps).
 // While apiKey is left as "PASTE_ME", the app runs in DEMO mode: data stays on this one device.
 export const firebaseConfig = {
-  apiKey: "PASTE_ME",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: "",
+  apiKey: "AIzaSyDT2VHhEMJjJiReqkJfKesylh3vdTNK51E",
+  authDomain: "project-riley-30890.firebaseapp.com",
+  projectId: "project-riley-30890",
+  storageBucket: "project-riley-30890.firebasestorage.app",
+  messagingSenderId: "824451744965",
+  appId: "1:824451744965:web:9e70ddd30e69c410701cac",
+  measurementId: "G-N5DHL78REP",
 };
 
 // Defaults – all editable later in the app's Settings.
