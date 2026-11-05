@@ -52,6 +52,6 @@ There are exactly two household `members`. Every record stores `by`. Phones log 
 - **New ideas** found while working become a new issue (`gh issue create`), not scope creep.
 
 ## Design
-- Design work uses the **Impeccable** skills (`/impeccable …`). `PRODUCT.md` (who the app is for) and `DESIGN.md` (the visual system) are the design source of truth once they exist. Read them before UI changes, and keep them updated when the system changes.
+- Design work uses the **Impeccable** skills (`/impeccable …`). `PRODUCT.md` (who the app is for) and `DESIGN.md` (the visual system, "The Kitchen Noticeboard") are the design source of truth. Read them before UI changes, and keep them updated when the system changes. `DESIGN.md` also lists known contrast gaps still to fix.
 - The UI is used one-handed, in the garden, at 6am, by tired people. Prefer big targets, high contrast and calm colours, and no clever-but-slow interactions.
 - Design tokens live as CSS variables in `:root` in `index.html`. If `DESIGN.md` changes a token, change it there too, and check dark mode and console night mode.
