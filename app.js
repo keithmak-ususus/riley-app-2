@@ -144,13 +144,14 @@ async function keepAwake() {
 }
 document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && isConsole() && keepAwake());
 
-const TABS = ["log", "today", "train", "health", "photos", "settings"];
+const TABS = ["log", "today", "train", "health", "photos", "settings", "guide"];
 function showTab(t) {
   if (!TABS.includes(t)) t = "log";
   ls.set("riley:tab", t);
   for (const id of TABS) $("#" + id).classList.toggle("hidden", id !== t);
   document.querySelectorAll("nav.tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === t));
   scrollTo(0, 0);
+  if (t === "guide") renderGuide();
 }
 document.querySelectorAll("nav.tabs button").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
 
@@ -502,7 +503,7 @@ function render() {
   const av = $("#hdrPhoto");
   if (latest?.thumb) { if (av.src !== latest.thumb) av.src = latest.thumb; av.classList.remove("hidden"); } else av.classList.add("hidden");
 
-  renderToday(); renderCoach(); renderUpcoming();
+  renderToday(); renderCoach(); renderUpcoming(); renderGuide();
 }
 
 function ageText() {
@@ -798,6 +799,75 @@ $("#playLapse").onclick = () => {
   }, 350);
 };
 
+
+// =====================================================================
+// Sitter guide (read-only; every figure comes from settings and GUIDELINES.md)
+// =====================================================================
+const phoneHref = (p) => "tel:" + String(p || "").replace(/[^\d+]/g, "");
+function renderGuide() {
+  const body = $("#guideBody"); if (!body || $("#guide").classList.contains("hidden")) return;
+  const name = esc(shared.dogName || "Riley"), n = Math.max(1, +shared.mealsPerDay || 4), per = portion();
+  const interval = shared.weeIntervalMin || 60, bed = esc(shared.bedtime || "22:00");
+  const mins = (ms) => Math.round(ms / MIN);
+  const card = (title, inner) => inner ? `<div class="card"><h3>${title}</h3>${inner}</div>` : "";
+  const contact = (label, who, phone, addr) => (who || phone || addr) ? `<div class="contact"><div><b>${esc(label)}</b>${who ? `<br>${esc(who)}` : ""}${addr ? `<br><span class="muted">${esc(addr)}</span>` : ""}</div>${phone ? `<a class="call" href="${esc(phoneHref(phone))}">📞 ${esc(phone)}</a>` : ""}</div>` : "";
+
+  const meals = `<p class="big">${n} meal${n === 1 ? "" : "s"} a day${per ? ` · ${per} g each` : ""}</p>
+    ${per ? `<p class="muted">${esc(shared.dailyGrams)} g in total for the day.</p>` : `<p class="muted">Portion not set yet – follow the feeding guide on the bag.</p>`}
+    ${shared.foodBrand ? `<p>Food: <b>${esc(shared.foodBrand)}</b></p>` : ""}
+    ${shared.mealTimes ? `<p>Meal times: <b>${esc(shared.mealTimes)}</b></p>` : ""}`;
+
+  const toilet = `<p class="big">Out every ${interval} min while awake</p>
+    <p>Also take ${name} out:</p>
+    <ul>
+      <li>straight after waking up</li>
+      <li>${mins(AFTER_MEAL)} min after a meal</li>
+      <li>${mins(AFTER_PLAY)} min after play or training</li>
+      <li>${mins(AFTER_PLAY)} min after visitors arrive or any excitement</li>
+      <li>last thing at night – from 30 min before bedtime (${bed})</li>
+      <li>straight after an accident, to finish outside</li>
+      <li>${mins(RETRY_AFTER_NOTHING)} min after a trip where nothing happened</li>
+    </ul>
+    <p><b>Signs he needs to go:</b> panting, intense sniffing at the floor, circling, or looking at you and then at the door.</p>`;
+
+  const routine = `<ol>
+      <li>Say <b>“Outside”</b>, then go to his toilet spot. Keep it calm and boring.</li>
+      <li>At the spot, say <b>“Busy busy”</b>, then ignore him until he has gone.</li>
+      <li>As he finishes, say <b>“Good”</b> and give a treat. Play comes <i>after</i> he has gone.</li>
+      <li>Nothing in 5 minutes? Go back inside, supervise closely and try again in 10–15 minutes.</li>
+    </ol>`;
+
+  const accidents = `<p>An accident is just an accident. Please don’t tell ${name} off or raise your voice – he’ll only learn to go in hidden places.</p>
+    <ul><li>If you catch him in the act, calmly say “Outside” and take him to his spot. Reward him if he finishes there.</li>
+      <li>Clean up while he’s busy with something else, using an <b>enzymatic cleaner</b> (or biological laundry liquid and water). No bleach or ammonia – they leave a toilet smell.</li></ul>`;
+
+  const night = `<p>Bedtime is around <b>${bed}</b>. Take ${name} out last thing, then settle him.</p>
+    <ul><li>Only crate him when he’s tired and satisfied, after play.</li>
+      <li>Load a Lickimat, Kong or snuffle mat first.</li>
+      <li>If he’s fallen asleep elsewhere, move him to his bed.</li>
+      <li>If he whines, ignore it and let him out when he’s quiet.</li></ul>
+    ${shared.crateNotes ? `<p class="notes">${esc(shared.crateNotes)}</p>` : ""}`;
+
+  const m = members(), ph = shared.ownerPhones || [];
+  const contacts = [
+    contact("Vet", shared.vetName, shared.vetPhone, shared.vetAddress),
+    contact("Emergency vet", shared.emergencyVetName, shared.emergencyVetPhone, ""),
+    ...m.map((who, i) => contact("Owner", who, ph[i], "")),
+  ].join("");
+
+  body.innerHTML = `<h1>${name}’s guide</h1><p class="sub">${esc(ageText())}</p>
+    ${card("🍽️ Food", meals)}
+    ${card("🚪 Toilet trips", toilet)}
+    ${card("🗣️ The toilet routine", routine)}
+    ${card("⚠️ Accidents", accidents)}
+    ${card("🌙 Bedtime and crate", night)}
+    ${card("📞 Who to call", contacts || `<p class="muted">Add the vet and owners’ phone numbers in Settings → Sitter guide details.</p>`)}
+    ${shared.quirks ? card("📝 Quirks &amp; notes", `<p class="notes">${esc(shared.quirks)}</p>`) : ""}`;
+}
+$("#openGuide").onclick = () => { showTab("guide"); renderGuide(); };
+$("#guideBack").onclick = () => showTab("settings");
+$("#guidePrint").onclick = () => print();
+
 // =====================================================================
 // Settings
 // =====================================================================
@@ -813,6 +883,13 @@ function fillSettings() {
   $("#sMeals").value = shared.mealsPerDay; $("#sGrams").value = shared.dailyGrams || "";
   $("#sInt").value = shared.weeIntervalMin; $("#sBed").value = shared.bedtime || "22:00";
   $("#sWorm").value = shared.intervals.worming; $("#sFlea").value = shared.intervals.flea;
+  const ph = shared.ownerPhones || [];
+  $("#sFood").value = shared.foodBrand || ""; $("#sMealTimes").value = shared.mealTimes || "";
+  $("#sVet").value = shared.vetName || ""; $("#sVetPh").value = shared.vetPhone || ""; $("#sVetAddr").value = shared.vetAddress || "";
+  $("#sEmName").value = shared.emergencyVetName || ""; $("#sEmPh").value = shared.emergencyVetPhone || "";
+  $("#sPh1").value = ph[0] || ""; $("#sPh2").value = ph[1] || "";
+  $("#sPh1L").textContent = `${m[0] || "Person 1"} – phone`; $("#sPh2L").textContent = `${m[1] || "Person 2"} – phone`;
+  $("#sCrate").value = shared.crateNotes || ""; $("#sQuirks").value = shared.quirks || "";
 }
 $("#sSave").onclick = async () => {
   const clamp = (v, lo, hi, d) => Math.min(hi, Math.max(lo, Math.round(+v) || d));
@@ -828,6 +905,11 @@ $("#sSave").onclick = async () => {
     adultSize: $("#sSize").value, mealsPerDay: clamp($("#sMeals").value, 1, 6, 4), dailyGrams: grams,
     weeIntervalMin: clamp($("#sInt").value, 15, 480, 60), bedtime: $("#sBed").value || "22:00",
     intervals: { worming: clamp($("#sWorm").value, 7, 180, 14), flea: clamp($("#sFlea").value, 7, 180, 30) },
+    foodBrand: $("#sFood").value.trim(), mealTimes: $("#sMealTimes").value.trim(),
+    vetName: $("#sVet").value.trim(), vetPhone: $("#sVetPh").value.trim(), vetAddress: $("#sVetAddr").value.trim(),
+    emergencyVetName: $("#sEmName").value.trim(), emergencyVetPhone: $("#sEmPh").value.trim(),
+    ownerPhones: [$("#sPh1").value.trim(), $("#sPh2").value.trim()],
+    crateNotes: $("#sCrate").value.trim(), quirks: $("#sQuirks").value.trim(),
   };
   if (grams !== (+shared.dailyGrams || 0)) { patch.gramsSetWeight = weights.length ? weights[weights.length - 1].kg : null; patch.gramsSetAt = Date.now(); }
   await store.setDoc("settings", "main", patch);

@@ -33,7 +33,7 @@
 html, body { margin: 0; background: var(--bg); color: var(--ink); }
 body { padding: env(safe-area-inset-top) 16px calc(84px + env(safe-area-inset-bottom)); min-height: 100vh; }
 button { font: inherit; color: inherit; border: 0; cursor: pointer; }
-input, select { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line);
+input, select, textarea { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line);
   border-radius: 12px; padding: 12px; width: 100%; }
 h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 24px 4px 10px; }
 h3 { font-size: 17px; margin: 0 0 4px; }
@@ -245,6 +245,28 @@ body.console #consoleTip .tip { padding: 10px 14px; }
 body.console #consoleTip .tip p { margin: 2px 0 0; }
 #consoleTip { display: none; }
 body.console #consoleTip { display: block; margin-top: 10px; }
+/* ---------- Sitter guide ---------- */
+#guide .guide-actions { display: flex; gap: 10px; margin: 6px 0 4px; }
+#guide .guide-actions .btn { min-height: 44px; padding: 10px 16px; }
+#guide h1 { font-size: 28px; margin: 14px 4px 2px; }
+#guide .sub { color: var(--muted); margin: 0 4px 6px; }
+#guide .card { margin-top: 12px; }
+#guide .card h3 { font-size: 17px; margin: 0 0 8px; }
+#guide ul, #guide ol { margin: 6px 0; padding-left: 22px; }
+#guide li { margin: 4px 0; }
+#guide .big { font-size: 20px; font-weight: 700; }
+#guide .contact { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+#guide .contact:first-of-type { border-top: 0; }
+#guide .contact a.call { background: var(--ok-bg); color: var(--ok); border-radius: 12px; padding: 12px 16px; font-weight: 700; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+#guide .notes { white-space: pre-wrap; }
+@media print {
+  :root, :root.night { --bg: #fff; --card: #fff; --ink: #000; --muted: #444; --line: #999; --ok-bg: #fff; --ok: #000; --shadow: none; }
+  header, nav.tabs, .toast, .guide-actions, .demo, .modal { display: none !important; }
+  section:not(#guide) { display: none !important; }
+  body { padding: 0; }
+  #guide .card { box-shadow: none; border: 1px solid var(--line); break-inside: avoid; }
+  #guide .contact a.call { border: 1px solid var(--line); }
+}
 </style>
 </head>
 <body>
@@ -432,9 +454,19 @@ body.console #consoleTip { display: block; margin-top: 10px; }
       <div class="grid" id="photoGrid"></div>
     </section>
 
+    <!-- ================= SITTER GUIDE ================= -->
+    <section id="guide" class="hidden">
+      <div class="guide-actions">
+        <button class="btn ghost" id="guideBack">‹ Back</button>
+        <button class="btn ghost" id="guidePrint">🖨️ Print</button>
+      </div>
+      <div id="guideBody"></div>
+    </section>
+
     <!-- ================= SETTINGS ================= -->
     <section id="settings" class="hidden">
-      <h2 class="first-h2">This device</h2>
+      <button class="btn ghost" id="openGuide" style="width:100%;min-height:48px">📖 Sitter guide – routine, contacts and notes</button>
+      <h2>This device</h2>
       <div class="field"><label for="sMe">Who uses this phone</label><select id="sMe"></select></div>
       <div class="field"><label for="sView">View</label>
         <select id="sView"><option value="auto">Automatic</option><option value="phone">Phone</option><option value="console">Home console (iPad)</option></select></div>
@@ -470,6 +502,23 @@ body.console #consoleTip { display: block; margin-top: 10px; }
         <div class="field" style="margin:0"><label for="sWorm">Worming</label><input id="sWorm" type="number" min="7" max="180"></div>
         <div class="field" style="margin:0"><label for="sFlea">Flea &amp; tick</label><input id="sFlea" type="number" min="7" max="180"></div>
       </div>
+      <h2>Sitter guide details</h2>
+      <p class="muted" style="margin:0 4px 10px;font-size:14px">Shown on the sitter guide. Anything you leave blank is left out.</p>
+      <div class="field"><label for="sFood">Food brand</label><input id="sFood" placeholder="e.g. the bag's name"></div>
+      <div class="field"><label for="sMealTimes">Meal times</label><input id="sMealTimes" placeholder="e.g. 07:30, 11:30, 15:30, 19:00"></div>
+      <div class="field"><label for="sVet">Vet – name</label><input id="sVet"></div>
+      <div class="two form" style="margin:0 0 12px">
+        <div class="field" style="margin:0"><label for="sVetPh">Vet – phone</label><input id="sVetPh" type="tel" inputmode="tel"></div>
+        <div class="field" style="margin:0"><label for="sEmPh">Emergency vet – phone</label><input id="sEmPh" type="tel" inputmode="tel"></div>
+      </div>
+      <div class="field"><label for="sVetAddr">Vet – address</label><input id="sVetAddr" autocomplete="street-address"></div>
+      <div class="field"><label for="sEmName">Emergency vet – name and address</label><input id="sEmName"></div>
+      <div class="two form" style="margin:0 0 12px">
+        <div class="field" style="margin:0"><label for="sPh1" id="sPh1L">Person 1 – phone</label><input id="sPh1" type="tel" inputmode="tel"></div>
+        <div class="field" style="margin:0"><label for="sPh2" id="sPh2L">Person 2 – phone</label><input id="sPh2" type="tel" inputmode="tel"></div>
+      </div>
+      <div class="field"><label for="sCrate">Crate notes</label><textarea id="sCrate" rows="2" maxlength="600"></textarea></div>
+      <div class="field"><label for="sQuirks">Quirks &amp; notes</label><textarea id="sQuirks" rows="3" maxlength="1000"></textarea></div>
       <button class="btn" id="sSave" style="width:100%">Save</button>
       <button class="btn ghost" id="leave" style="width:100%;margin-top:24px">Leave household on this device</button>
     </section>
