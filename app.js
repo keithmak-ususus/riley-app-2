@@ -151,36 +151,128 @@ function toast(msg, buttons = [], ms = 5000) {
 }
 const portion = () => (shared.dailyGrams ? Math.round(shared.dailyGrams / Math.max(1, shared.mealsPerDay || 4)) : 0);
 
-async function log(type) {
+async function log(type, at = Date.now()) {
   const by = await who(`${EMOJI[type]} ${LABEL[type]} – who's logging?`);
   if (by === null) return;
-  const ev = { type, at: Date.now(), by };
+  const ev = { type, at, by };
   if (type === "meal" && portion()) ev.grams = portion();
   const id = await store.add("events", ev);
   navigator.vibrate?.(30);
   const undo = ["Undo", () => store.remove("events", id)];
-  if (type.startsWith("acc_")) toast("Logged – no telling off. Enzymatic cleaner, no bleach or ammonia", [undo], 8000);
-  else if (type === "out") toast("🚪 Logged – supervise closely, try again in 10–15 min", [undo], 8000);
-  else if (type === "meal") toast(`🍽️ Meal${ev.grams ? ` · ${ev.grams} g` : ""} logged`, [undo, ["Edit g", () => editGrams({ id, ...ev })]], 6000);
-  else toast(`${EMOJI[type]} ${LABEL[type]} logged`, [undo]);
+  const when = Date.now() - at > MIN ? ` at ${hm(at)}` : "";
+  if (type.startsWith("acc_")) toast(`Logged${when} – no telling off. Enzymatic cleaner, no bleach or ammonia`, [undo], 8000);
+  else if (type === "out") toast(`🚪 Logged${when} – supervise closely, try again in 10–15 min`, [undo], 8000);
+  else if (type === "meal") toast(`🍽️ Meal${ev.grams ? ` · ${ev.grams} g` : ""} logged${when}`, [undo, ["Edit", () => editEntry({ id, ...ev })]], 6000);
+  else toast(`${EMOJI[type]} ${LABEL[type]} logged${when}`, [undo]);
 }
-function editGrams(ev) {
-  const v = prompt("Grams for this meal", ev.grams || portion() || "");
-  if (v === null) return;
-  const g = Math.round(+v);
-  if (g >= 0 && g < 2000) store.update("events", ev.id, { grams: g });
+
+// ---------- log something that happened earlier ----------
+// Events older than the 10-day window the app loads would vanish, so stop a little short of it.
+const MAX_BACK = 9 * DAY;
+const earlierUsed = () => ls.get("riley:usedEarlier", "") === "1";
+function showEarlierHint() { $("#earlierHint").classList.toggle("hidden", earlierUsed()); }
+showEarlierHint();
+
+// "HH:MM" → today at that time; if that's still ahead of us, it must have been yesterday.
+function timeToday(v) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(v || ""); if (!m) return null;
+  const d = new Date(); d.setHours(+m[1], +m[2], 0, 0);
+  if (d.getTime() > Date.now()) d.setDate(d.getDate() - 1);
+  return d.getTime();
 }
+// Resolves to a timestamp, or null if cancelled.
+function askWhen(title) {
+  return new Promise((resolve) => {
+    const modal = $("#whenModal"), pick = $("#whenPick"), time = $("#whenTime");
+    $("#whenTitle").textContent = title;
+    pick.classList.add("hidden");
+    const finish = (v) => { modal.classList.add("hidden"); if (v !== null) { ls.set("riley:usedEarlier", "1"); showEarlierHint(); } resolve(v); };
+    $("#whenGrid").onclick = (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      if (b.dataset.min === "pick") { time.value = hm(Date.now()); pick.classList.remove("hidden"); time.focus(); return; }
+      finish(Date.now() - +b.dataset.min * MIN);
+    };
+    $("#whenSet").onclick = () => { const at = timeToday(time.value); if (at !== null) finish(at); };
+    $("#whenCancel").onclick = () => finish(null);
+    modal.classList.remove("hidden");
+  });
+}
+
+// Edit an existing entry's time (and grams, for meals). Keeps the entry on its original day.
+function editEntry(ev) {
+  const modal = $("#editModal"), err = $("#editErr"), isMeal = ev.type === "meal";
+  $("#editTitle").textContent = `${EMOJI[ev.type] || ""} ${LABEL[ev.type] || ev.type}`;
+  $("#editTime").value = hm(ev.at);
+  $("#editGramsWrap").classList.toggle("hidden", !isMeal);
+  $("#editGrams").value = ev.grams ?? portion() ?? "";
+  err.classList.add("hidden");
+  const close = () => modal.classList.add("hidden");
+  const fail = (msg) => { err.textContent = msg; err.classList.remove("hidden"); };
+  $("#editCancel").onclick = close;
+  $("#editSave").onclick = async () => {
+    const m = /^(\d{1,2}):(\d{2})$/.exec($("#editTime").value); if (!m) return fail("Pick a time");
+    const d = new Date(ev.at); d.setHours(+m[1], +m[2], 0, 0);
+    const at = d.getTime(), patch = {};
+    if (at > Date.now()) return fail("That time hasn't happened yet");
+    if (Date.now() - at > MAX_BACK) return fail("That's too far back");
+    if (at !== ev.at) patch.at = at;
+    if (isMeal) {
+      const g = Math.round(+$("#editGrams").value);
+      if (!(g >= 0 && g < 2000)) return fail("Grams should be between 0 and 1999");
+      if (g !== ev.grams) patch.grams = g;
+    }
+    close();
+    if (Object.keys(patch).length) await store.update("events", ev.id, patch);
+  };
+  modal.classList.remove("hidden");
+}
+
+// Long-press (≈0.5 s) runs `onHold` instead of the normal tap.
+function holdable(root, onHold) {
+  let timer, fired = false, x0 = 0, y0 = 0;
+  const cancel = () => clearTimeout(timer);
+  root.addEventListener("pointerdown", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    fired = false; x0 = e.clientX; y0 = e.clientY; cancel();
+    timer = setTimeout(() => { fired = true; navigator.vibrate?.(15); onHold(b); }, 500);
+  });
+  root.addEventListener("pointermove", (e) => { if (Math.hypot(e.clientX - x0, e.clientY - y0) > 10) cancel(); });
+  ["pointerup", "pointercancel", "pointerleave"].forEach((t) => root.addEventListener(t, cancel));
+  root.addEventListener("contextmenu", (e) => e.preventDefault());
+  // Swallow the click that follows a long press so it doesn't also log "now".
+  root.addEventListener("click", (e) => { if (fired) { fired = false; e.stopPropagation(); e.preventDefault(); } }, true);
+}
+
+let accAt = null;  // time chosen for an accident via long-press on the main Accident button
 $("#actions").onclick = (e) => {
   const b = e.target.closest(".act"); if (!b) return;
   const t = b.dataset.type;
-  if (t === "accident") { $("#accSheet").classList.toggle("hidden"); return; }
+  if (t === "accident") { accAt = null; $("#accSheet").classList.toggle("hidden"); return; }
   if (t === "nap") return log(isAsleep() ? "wake" : "sleep");
   log(t);
 };
 $("#accSheet").onclick = (e) => {
   const v = e.target.dataset.acc; if (v === undefined) return;
-  $("#accSheet").classList.add("hidden"); if (v) log(v);
+  $("#accSheet").classList.add("hidden");
+  const at = accAt ?? Date.now(); accAt = null;
+  if (v) log(v, at);
 };
+holdable($("#actions"), async (b) => {
+  const t = b.dataset.type; if (!t) return;
+  if (t === "accident") {
+    const at = await askWhen("⚠️ Accident – when?");
+    if (at !== null) { accAt = at; $("#accSheet").classList.remove("hidden"); }
+    return;
+  }
+  const type = t === "nap" ? (isAsleep() ? "wake" : "sleep") : t;
+  const at = await askWhen(`${EMOJI[type]} ${LABEL[type]} – when?`);
+  if (at !== null) log(type, at);
+});
+holdable($("#accSheet"), async (b) => {
+  const v = b.dataset.acc; if (!v) return;
+  const at = await askWhen(`⚠️ ${LABEL[v]} – when?`);
+  if (at !== null) { $("#accSheet").classList.add("hidden"); accAt = null; log(v, at); }
+});
 
 // =====================================================================
 // Derived state
@@ -393,16 +485,17 @@ function renderToday() {
 
   const tl = $("#timeline"); tl.innerHTML = "";
   if (!t.length) { tl.innerHTML = `<div class="empty">Nothing logged yet today</div>`; return; }
-  for (const e of [...t].reverse()) {
+  [...t].reverse().forEach((e, i) => {
     const row = document.createElement("div"); row.className = "row";
     const isMeal = e.type === "meal";
+    const hint = isMeal ? "Tap to edit time or grams" : i === 0 ? "Tap to edit time" : "";
     row.innerHTML = `<span class="t">${hm(e.at)}</span>
-      <${isMeal ? "button" : "span"} class="what">${EMOJI[e.type] || ""} ${esc(LABEL[e.type] || e.type)}${isMeal && e.grams ? ` · ${e.grams} g` : ""}${isMeal ? `<small>Tap to change grams</small>` : ""}</${isMeal ? "button" : "span"}>
+      <button class="what">${EMOJI[e.type] || ""} ${esc(LABEL[e.type] || e.type)}${isMeal && e.grams ? ` · ${e.grams} g` : ""}${hint ? `<small>${hint}</small>` : ""}</button>
       ${byline(e.by)}<button class="x" aria-label="Delete">×</button>`;
-    if (isMeal) row.querySelector(".what").onclick = () => editGrams(e);
+    row.querySelector(".what").onclick = () => editEntry(e);
     row.querySelector(".x").onclick = () => confirm(`Delete "${LABEL[e.type]}" at ${hm(e.at)}?`) && store.remove("events", e.id);
     tl.append(row);
-  }
+  });
 }
 
 function renderFood() {

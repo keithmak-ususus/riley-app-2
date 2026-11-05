@@ -101,6 +101,7 @@ header .age { color: var(--muted); font-size: 14px; margin-top: 2px; }
 .list { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 .row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--line); }
 .row:first-child { border-top: 0; }
+.row .what { min-height: 44px; display: flex; flex-direction: column; justify-content: center; }
 .row .t { font-variant-numeric: tabular-nums; color: var(--muted); width: 48px; font-size: 14px; flex: none; }
 .row .what { flex: 1; font-weight: 600; min-width: 0; }
 .row .what small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; margin-top: 1px; }
@@ -176,6 +177,18 @@ svg.chart { width: 100%; height: 120px; display: block; }
 /* who picker */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 15; display: grid; place-items: center; padding: 20px; }
 .modal .box { background: var(--card); border-radius: 22px; padding: 22px; width: min(460px, 100%); box-shadow: 0 10px 40px rgba(0,0,0,.25); }
+.whenGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 10px; }
+.whenGrid button { background: var(--accent); color: var(--accent-ink); border-radius: 14px; min-height: 56px; font-weight: 650; }
+.whenGrid button[data-min="0"], .whenGrid button[data-min="pick"] { background: var(--bg); color: var(--ink); border: 2px solid var(--line); }
+.modal .btn.ghost { background: var(--bg); border: 2px solid var(--line); box-shadow: none; }
+.timeRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 10px; }
+.timeRow .btn, #whenCancel { min-height: 48px; }
+.efield { display: block; font-size: 13px; color: var(--muted); font-weight: 600; margin: 12px 0; }
+.efield input { margin-top: 4px; min-height: 48px; }
+.editErr { color: var(--alert); font-size: 14px; margin: 0 0 10px; }
+.earlier { margin-left: auto; font-weight: 600; color: var(--accent); }
+.group-label.has-hint { display: flex; align-items: center; }
+.act { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
 .modal .people { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0 10px; }
 .modal .people button { border-radius: 18px; padding: 22px 10px; color: #fff; font-size: 20px; font-weight: 700; }
 
@@ -276,7 +289,7 @@ body.console #consoleTip { display: block; margin-top: 10px; }
         <div class="tile" id="tSleep"><div class="label">😴 Sleep</div><div class="big">–</div><div class="sub"></div></div>
       </div>
       <div id="actions">
-        <div class="group-label">Outside</div>
+        <div class="group-label has-hint">Outside<span class="earlier" id="earlierHint">Hold a button to log earlier</span></div>
         <div class="actions out">
           <button class="act primary" data-type="wee"><span class="e">💧</span>Wee</button>
           <button class="act primary" data-type="poo"><span class="e">💩</span>Poo</button>
@@ -463,6 +476,38 @@ body.console #consoleTip { display: block; margin-top: 10px; }
     <h3 id="whoTitle">Who's logging?</h3>
     <div class="people" id="whoPeople"></div>
     <button class="btn ghost" id="whoCancel" style="width:100%">Cancel</button>
+  </div>
+</div>
+
+<div class="modal hidden" id="whenModal" role="dialog" aria-label="When did it happen?">
+  <div class="box">
+    <h3 id="whenTitle">When?</h3>
+    <div class="whenGrid" id="whenGrid">
+      <button data-min="0">Just now</button>
+      <button data-min="5">5 min ago</button>
+      <button data-min="10">10 min ago</button>
+      <button data-min="15">15 min ago</button>
+      <button data-min="30">30 min ago</button>
+      <button data-min="pick">Pick a time</button>
+    </div>
+    <div class="timeRow hidden" id="whenPick">
+      <input type="time" id="whenTime" aria-label="Time">
+      <button class="btn" id="whenSet">Set</button>
+    </div>
+    <button class="btn ghost" id="whenCancel" style="width:100%">Cancel</button>
+  </div>
+</div>
+
+<div class="modal hidden" id="editModal" role="dialog" aria-label="Edit entry">
+  <div class="box">
+    <h3 id="editTitle">Edit entry</h3>
+    <label class="efield">Time<input type="time" id="editTime"></label>
+    <label class="efield hidden" id="editGramsWrap">Grams<input type="number" id="editGrams" inputmode="numeric" min="0" max="1999"></label>
+    <p class="editErr hidden" id="editErr" role="alert"></p>
+    <div class="timeRow">
+      <button class="btn ghost" id="editCancel">Cancel</button>
+      <button class="btn" id="editSave">Save</button>
+    </div>
   </div>
 </div>
 
