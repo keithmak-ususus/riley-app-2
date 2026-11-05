@@ -11,17 +11,32 @@ export async function openStore(household) {
 async function firebaseStore(household) {
   const V = "10.12.2";
   const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
-  const { getAuth, signInAnonymously } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
+  const A = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
   const fs = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
 
   const app = initializeApp(firebaseConfig);
-  await signInAnonymously(getAuth(app));
+  const auth = A.getAuth(app);
+  try { await A.getRedirectResult(auth); } catch (e) { console.error(e); }  // returning from a Google redirect
+  await auth.authStateReady();
   const db = fs.initializeFirestore(app, {
     localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() }),
   });
   const col = (name) => fs.collection(db, "households", household, name);
 
   return {
+    // Owners sign in with Google. A leftover anonymous session from the old setup doesn't count.
+    needsSignIn: () => !(auth.currentUser && !auth.currentUser.isAnonymous),
+    user: () => auth.currentUser,
+    async signIn() {
+      const provider = new A.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      try { await A.signInWithPopup(auth, provider); }
+      catch (e) {  // popups can be blocked in home-screen apps: fall back to a full-page redirect
+        if (["auth/popup-blocked", "auth/operation-not-supported-in-this-environment"].includes(e.code)) return A.signInWithRedirect(auth, provider);
+        throw e;
+      }
+    },
+    signOut: () => A.signOut(auth),
     subscribe(name, cb, sinceMs) {
       const q = sinceMs
         ? fs.query(col(name), fs.where("at", ">=", sinceMs), fs.orderBy("at"))
@@ -50,6 +65,7 @@ function demoStore(household) {
   addEventListener("storage", (e) => subs.forEach((s) => e.key === key(s.n) && s.fire()));
 
   return {
+    needsSignIn: () => false, user: () => null, signIn: async () => {}, signOut: async () => {},
     subscribe(n, cb, sinceMs) {
       const s = { n, fire: () => cb(read(n).filter((r) => !sinceMs || r.at >= sinceMs).sort((a, b) => (a.at || 0) - (b.at || 0))) };
       subs.push(s); setTimeout(s.fire);

@@ -44,13 +44,62 @@ function join(code) {
   $("#setup").classList.add("hidden"); start();
 }
 
+let subscribed = false;
+
+// ---- Google sign-in and owner access (rules are in firestore.rules) ----
+function showSignIn(problem) {
+  $("#app").classList.add("hidden"); $("#signin").classList.remove("hidden");
+  const err = $("#signinErr"), email = store.user()?.email;
+  err.classList.toggle("hidden", !problem);
+  if (problem === "denied") err.textContent = `${email || "This Google account"} isn't an owner of this household. Ask the other owner to add your email in Settings, or sign in with a different account.`;
+  else if (problem && problem !== "denied") err.textContent = problem;
+  $("#googleBtn").textContent = email ? "Sign in with a different Google account" : "Sign in with Google";
+  $("#googleBtn").onclick = async () => {
+    err.classList.add("hidden");
+    try { if (email) await store.signOut(); await store.signIn(); start(); }
+    catch (e) { if (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request") return; err.textContent = signInMessage(e); err.classList.remove("hidden"); }
+  };
+  $("#signinLeave").onclick = () => { ls.del("riley:hh"); location.reload(); };
+}
+function signInMessage(e) {
+  if (e.code === "auth/unauthorized-domain") return "This site isn't an authorised domain in Firebase yet (Authentication → Settings → Authorised domains).";
+  if (e.code === "auth/operation-not-allowed") return "Google sign-in isn't switched on in Firebase yet (Authentication → Sign-in method → Google).";
+  return "Couldn't sign in: " + (e.message || e.code);
+}
+// Make sure this Google account has a members/<uid> record. The first account to arrive creates the owners
+// list (containing itself), so the existing household is claimed by whoever signs in first.
+async function claimAccess() {
+  const user = store.user(); if (!user) return "ok";  // demo mode
+  const email = (user.email || "").toLowerCase();
+  const record = () => ({ role: "owner", name: me || user.displayName || email, email, createdAt: Date.now() });
+  try { if (await store.get("members", user.uid)) return "ok"; } catch {}
+  try { await store.setDoc("members", user.uid, record()); return "ok"; } catch {}
+  try { await store.setDoc("meta", "owners", { emails: [email] }); } catch { return "denied"; }
+  try { await store.setDoc("members", user.uid, record()); return "ok"; } catch { return "denied"; }
+}
+let ownerEmails = [];
+async function loadOwners() {
+  if (!store.user()) return;
+  try { ownerEmails = (await store.get("meta", "owners"))?.emails || []; } catch {}
+  const mine = (store.user().email || "").toLowerCase(), others = ownerEmails.filter((e) => e !== mine);
+  $("#ownersField").classList.remove("hidden"); $("#signOutBtn").classList.remove("hidden");
+  $("#sOwn1").value = mine; $("#sOwn1").readOnly = true; $("#sOwn2").value = others[0] || "";
+}
+$("#signOutBtn").onclick = async () => { if (confirm("Sign out of Google on this device?")) { await store.signOut(); location.reload(); } };
+
 async function start() {
   $("#app").classList.remove("hidden");
   applyView();
-  try { store = await openStore(household); }
+  try { store = store || await openStore(household); }
   catch (e) { $("#nudge").textContent = "Couldn't connect: " + e.message; $("#nudge").className = "nudge"; return; }
+  if (store.needsSignIn()) return showSignIn();
+  $("#signin").classList.add("hidden");
+  const access = await claimAccess();
+  if (access !== "ok") return showSignIn(access);
+  if (subscribed) return; subscribed = true;
+  loadOwners();
   const since = Date.now() - 10 * DAY;
-  store.subscribe("events", (rows) => { if (rows) { events = rows; render(); } }, since);
+  store.subscribe("events", (rows, err) => { if (rows) { events = rows; render(); } else if (err) showSignIn("denied"); }, since);
   store.subscribe("health", (rows) => { if (rows) { health = rows; renderHealth(); } });
   store.subscribe("weights", (rows) => { if (rows) { weights = rows.sort((a, b) => a.at - b.at); renderWeights(); render(); } });
   store.subscribe("treatments", (rows) => { if (rows) { treatments = rows; renderHealth(); render(); } });
@@ -782,6 +831,12 @@ $("#sSave").onclick = async () => {
   };
   if (grams !== (+shared.dailyGrams || 0)) { patch.gramsSetWeight = weights.length ? weights[weights.length - 1].kg : null; patch.gramsSetAt = Date.now(); }
   await store.setDoc("settings", "main", patch);
+  if (store.user()) {  // owners list: you plus (optionally) your partner
+    const mine = (store.user().email || "").toLowerCase(), partner = $("#sOwn2").value.trim().toLowerCase();
+    const emails = [mine, ...(partner && partner !== mine ? [partner] : [])];
+    if (partner && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(partner)) { toast("That partner email doesn't look right"); return; }
+    if (emails.join() !== ownerEmails.join()) { await store.setDoc("meta", "owners", { emails }); ownerEmails = emails; }
+  }
   toast("Saved"); applyView();
 };
 $("#shareLink").onclick = async () => {

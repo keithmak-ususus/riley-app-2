@@ -1,12 +1,70 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Each household lives under a long random code that only your devices know.
-    // Devices sign in anonymously; nothing outside /households/<code>/ is readable.
-    match /households/{hid}/{collection}/{docId} {
-      allow read, write: if request.auth != null
-                         && hid.size() >= 18
-                         && collection in ['events', 'health', 'weights', 'settings', 'treatments', 'training', 'photos', 'photoFull'];
+    // Each household lives under a long random code (the household id).
+    // Access is per person: a signed-in user needs a document at households/<hid>/members/<their uid>.
+    //   owner  – the two household members, signed in with Google. Full access.
+    // (Sitters arrive in a later step: role "sitter" with an expiry and per-collection limits.)
+    match /households/{hid} {
+      function validHid() { return hid.size() >= 18; }
+      function signedIn() { return request.auth != null; }
+      function membersPath(uid) { return /databases/$(database)/documents/households/$(hid)/members/$(uid); }
+      function ownersPath() { return /databases/$(database)/documents/households/$(hid)/meta/owners; }
+
+      // The caller's own membership record, if it exists and hasn't expired.
+      function memberData() { return get(membersPath(request.auth.uid)).data; }
+      function activeMember() {
+        return signedIn() && exists(membersPath(request.auth.uid))
+          && (!('expiresAt' in memberData()) || memberData().expiresAt > request.time);
+      }
+      function isOwner() {
+        return validHid() && activeMember() && get(membersPath(request.auth.uid)).data.role == 'owner';
+      }
+
+      // Only a verified Google account can be an owner.
+      function googleEmail() {
+        return signedIn()
+          && request.auth.token.firebase.sign_in_provider == 'google.com'
+          && request.auth.token.email_verified == true
+          && request.auth.token.email != null;
+      }
+      function myEmail() { return request.auth.token.email.lower(); }
+
+      // The household's data. Owners only (for now).
+      match /{collection}/{docId} {
+        allow read, write: if isOwner()
+          && collection in ['events', 'health', 'weights', 'settings', 'treatments', 'training', 'photos', 'photoFull'];
+      }
+
+      // Who is an owner. The first Google account to arrive creates this list (containing itself);
+      // after that only an existing owner can change it (e.g. to add the partner's email).
+      match /meta/owners {
+        allow read: if isOwner();
+        allow create: if validHid() && googleEmail()
+          && !exists(ownersPath())
+          && request.resource.data.keys().hasOnly(['emails'])
+          && request.resource.data.emails is list
+          && request.resource.data.emails.size() >= 1 && request.resource.data.emails.size() <= 2
+          && myEmail() in request.resource.data.emails;
+        allow update: if isOwner()
+          && request.resource.data.keys().hasOnly(['emails'])
+          && request.resource.data.emails is list
+          && request.resource.data.emails.size() >= 1 && request.resource.data.emails.size() <= 2
+          && myEmail() in request.resource.data.emails;   // an owner can't lock themselves out
+      }
+
+      match /members/{uid} {
+        // You can read your own record (to learn your role); owners can read everyone's.
+        allow read: if validHid() && signedIn() && (request.auth.uid == uid || isOwner());
+        // An owner claims their own record, if their verified Google email is on the owners list.
+        allow create: if validHid() && googleEmail() && request.auth.uid == uid
+          && exists(ownersPath())
+          && myEmail() in get(ownersPath()).data.emails
+          && request.resource.data.keys().hasOnly(['role', 'name', 'email', 'createdAt'])
+          && request.resource.data.role == 'owner'
+          && request.resource.data.email == myEmail();
+        allow update, delete: if isOwner();
+      }
     }
   }
 }

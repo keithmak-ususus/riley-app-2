@@ -205,9 +205,11 @@ nav.tabs button.dot::after { content: ""; position: absolute; top: 8px; left: ca
   align-items: center; font-weight: 600; z-index: 30; box-shadow: 0 6px 24px rgba(0,0,0,.2); width: max-content; max-width: calc(100vw - 32px); }
 .toast button { background: none; color: var(--accent); font-weight: 700; filter: brightness(1.4); flex: none; }
 
-#setup { max-width: 440px; margin: 10vh auto 0; }
-#setup h1 { font-size: 36px; margin: 0 0 6px; }
-#setup p { color: var(--muted); }
+#setup, #signin { max-width: 440px; margin: 10vh auto 0; }
+#setup h1, #signin h1 { font-size: 36px; margin: 0 0 6px; }
+#setup p, #signin p { color: var(--muted); }
+#signin .btn { min-height: 52px; margin-top: 10px; }
+#signin .err { color: var(--alert); }
 
 /* ---------- iPad console ---------- */
 body.console { padding: max(12px, env(safe-area-inset-top)) 28px 12px; }
@@ -256,6 +258,14 @@ body.console #consoleTip { display: block; margin-top: 10px; }
   <div class="field"><input id="joinCode" placeholder="Household code" autocapitalize="off"></div>
   <button class="btn ghost" id="joinHh" style="width:100%">Join</button>
   <div class="demo hidden" id="setupDemo">Demo mode: Firebase isn't configured yet, so data stays on this device only.</div>
+</div>
+
+<div id="signin" class="hidden">
+  <h1>🐾 Riley</h1>
+  <p id="signinMsg">Sign in with Google to open the household.</p>
+  <button class="btn" id="googleBtn" style="width:100%">Sign in with Google</button>
+  <p class="err hidden" id="signinErr" role="alert"></p>
+  <button class="btn ghost" id="signinLeave" style="width:100%">Use a different household</button>
 </div>
 
 <div id="app" class="hidden">
@@ -432,7 +442,10 @@ body.console #consoleTip { display: block; margin-top: 10px; }
       <div class="field"><label>The two of you (the iPad asks which one is logging)</label>
         <div class="two form" style="margin:0"><input id="sM1" placeholder="Person 1"><input id="sM2" placeholder="Person 2"></div></div>
       <div class="field"><label>Household code</label><div class="code" id="sCode"></div></div>
+      <div class="field hidden" id="ownersField"><label>Owners – the Google emails that can sign in (you and your partner)</label>
+        <div class="two form" style="margin:0"><input id="sOwn1" type="email" placeholder="Your Google email" autocapitalize="off"><input id="sOwn2" type="email" placeholder="Partner's Google email" autocapitalize="off"></div></div>
       <button class="btn ghost" id="shareLink" style="width:100%;margin-bottom:12px">Share join link</button>
+      <button class="btn ghost hidden" id="signOutBtn" style="width:100%;margin-bottom:12px">Sign out of Google</button>
       <h2>Puppy</h2>
       <div class="field"><label for="sDog">Name</label><input id="sDog"></div>
       <div class="two form" style="margin:0 0 12px">

@@ -16,10 +16,15 @@ A shared puppy log for the household. The iPad shows a live console, and the pho
 
 ### 1. Firebase (shared live data)
 1. Go to https://console.firebase.google.com → **Add project** → name it `riley` and turn Analytics off.
-2. **Build → Authentication → Get started → Sign-in method → Anonymous → Enable.**
+2. **Build → Authentication → Get started → Sign-in method → Google → Enable** (pick a support email, then Save). Owners sign in with Google. Also add your site under **Authentication → Settings → Authorised domains** (for example `YOUR-USERNAME.github.io`).
 3. **Build → Firestore Database → Create database.** Choose location `europe-west2 (London)` and start in **production mode**.
 4. In Firestore's **Rules** tab, paste the contents of `firestore.rules` and click **Publish**.
 5. **Project settings (⚙️) → Your apps → Web (</>)**: register an app called `riley`, then copy the `firebaseConfig` values into `config.js`.
+6. **Owners:** the first Google account to open a household claims it. Then add your partner's Google email in ⚙️ Settings → Owners, and they can sign in. The rules only let verified Google accounts on that list in, so a leaked household code or join link is not enough.
+
+**Upgrading from the anonymous-sign-in version:** publish the new `firestore.rules` only *after* you've signed in with Google on your own devices. Once it's published, devices still on the old anonymous sign-in lose access until their owner signs in with Google. The data itself stays where it is.
+
+**Testing the rules:** `cd tests/rules && npm install && npm test` (needs Java for the Firebase emulator). Run it after any change to `firestore.rules`.
 
 The free Spark plan needs no card and is far above what a puppy log uses.
 

@@ -14,7 +14,7 @@ A household puppy log for Riley. The iPad runs it as a wall console, and two pho
 - `photos.js`: compresses camera photos into JPEG data URLs (full ≤ 700 KB, thumb ~20 KB). **Photos live in Firestore, not Cloud Storage**, because the Spark plan has no Storage.
 - `store.js`: data layer with `subscribe / add / update / remove / setDoc (merge) / get`. Firestore when `config.js` has keys, otherwise a localStorage **demo mode**. Demo mode must keep working.
 - `config.js`: Firebase config plus shared defaults.
-- `firestore.rules`: if you add a collection, add it to the list there too.
+- `firestore.rules`: if you add a collection, add it to the list there too, and add tests in `tests/rules/` (`cd tests/rules && npm test`, needs Java). Access is per person: owners sign in with Google and need a `members/<uid>` record.
 
 ## Data (`households/<code>/…`)
 | Collection | Shape |
@@ -25,6 +25,8 @@ A household puppy log for Riley. The iPad runs it as a wall console, and two pho
 | `health` | reminders `{kind, title, due "YYYY-MM-DD", done, doneAt, doneBy}` |
 | `weights` | `{kg, at, by}` |
 | `photos` / `photoFull` | doc id = `YYYY-MM-DD`. `photos` holds `{thumb, w, h, at, by}` and `photoFull` holds `{full}` (loaded only in the viewer) |
+| `members` | doc id = auth uid: `{role: "owner", name, email, createdAt}`. Written only by the owner claiming their own record |
+| `meta/owners` | `{emails: [..]}` – verified Google emails allowed to be owners (max 2, lower-case). The first Google account to arrive creates it |
 | `settings/main` | `members[2]`, `dogName`, `birthDate`, `arrivalDate`, `adultSize`, `mealsPerDay`, `dailyGrams`, `gramsSetWeight`, `weeIntervalMin`, `bedtime`, `intervals{worming,flea}`, `train{nameLevel}`, `dismissed{id: untilMs}` |
 
 A new event type needs entries in `LABEL` and `EMOJI`, and in `OUT_TYPES` if it counts as a trip outside.

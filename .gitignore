@@ -3,3 +3,5 @@ node_modules/
 *.pdf
 .firebase/
 firebase-debug.log
+firestore-debug.log
+*-debug.log
