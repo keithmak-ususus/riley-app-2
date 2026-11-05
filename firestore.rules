@@ -1,0 +1,12 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Each household lives under a long random code that only your devices know.
+    // Devices sign in anonymously; nothing outside /households/<code>/ is readable.
+    match /households/{hid}/{collection}/{docId} {
+      allow read, write: if request.auth != null
+                         && hid.size() >= 18
+                         && collection in ['events', 'health', 'weights', 'settings', 'treatments', 'training', 'photos', 'photoFull'];
+    }
+  }
+}

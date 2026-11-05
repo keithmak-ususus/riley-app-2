@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Riley">
+<meta name="theme-color" content="#FBF7F1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-512.png">
+<link rel="icon" href="icon-512.png">
+<title>Riley</title>
+<style>
+:root {
+  --bg: #FBF7F1; --card: #FFFFFF; --ink: #2A2420; --muted: #7A6F66; --line: #E9E1D7;
+  --accent: #C2603C; --accent-ink: #FFFFFF; --ok: #3C7D5A; --ok-bg: #E7F2EB;
+  --warn: #9A6412; --warn-bg: #FBEFD9; --alert: #B83A2E; --alert-bg: #FBE4E1;
+  --p1: #2F6DB5; --p2: #A8457A;   /* the two household members */
+  --radius: 18px; --shadow: 0 1px 2px rgba(42,36,32,.06), 0 4px 14px rgba(42,36,32,.05);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) { --bg:#1A1714; --card:#26211D; --ink:#F2EBE3; --muted:#A99D92; --line:#3A332D;
+    --ok-bg:#1F3328; --warn-bg:#3A2D17; --alert-bg:#3D211D; --ok:#7CC49A; --warn:#E5B567; --alert:#F08A7E;
+    --p1:#6FA3E0; --p2:#E08AB8; }
+}
+:root.night { --bg:#0F0D0B; --card:#1A1714; --ink:#D9CFC4; --muted:#8C8076; --line:#2C2621;
+  --ok-bg:#16241C; --warn-bg:#2B2112; --alert-bg:#2E1814; --ok:#6BAF88; --warn:#D4A55A; --alert:#E07A6E; --accent:#A8512F;
+  --p1:#5B8CC4; --p2:#C47AA2; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); }
+body { padding: env(safe-area-inset-top) 16px calc(84px + env(safe-area-inset-bottom)); min-height: 100vh; }
+button { font: inherit; color: inherit; border: 0; cursor: pointer; }
+input, select { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px; width: 100%; }
+h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 24px 4px 10px; }
+h3 { font-size: 17px; margin: 0 0 4px; }
+a { color: inherit; }
+.hidden { display: none !important; }
+.muted { color: var(--muted); }
+.demo { background: var(--warn-bg); color: var(--warn); font-size: 13px; padding: 8px 12px; border-radius: 10px; margin-top: 10px; }
+
+header { display: flex; align-items: center; gap: 12px; padding: 16px 4px 8px; }
+header .title { flex: 1; min-width: 0; }
+header h1 { margin: 0; font-size: 30px; letter-spacing: -.02em; }
+header .age { color: var(--muted); font-size: 14px; margin-top: 2px; }
+.avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; box-shadow: var(--shadow); background: var(--line); }
+.clock { font-size: 40px; font-weight: 700; font-variant-numeric: tabular-nums; display: none; }
+.iconbtn { background: var(--card); width: 44px; height: 44px; border-radius: 50%; box-shadow: var(--shadow); font-size: 20px; flex: none; }
+
+/* person badges */
+.badge { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: #fff;
+  font-size: 12px; font-weight: 700; background: var(--muted); flex: none; }
+.badge.p1 { background: var(--p1); } .badge.p2 { background: var(--p2); }
+.byline { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+
+.nudge { background: var(--alert-bg); color: var(--alert); border-radius: var(--radius); padding: 14px 16px;
+  font-weight: 650; font-size: 17px; margin: 8px 0 4px; }
+.nudge.calm { background: var(--ok-bg); color: var(--ok); }
+.nudge.warn { background: var(--warn-bg); color: var(--warn); }
+.routine { background: var(--card); box-shadow: var(--shadow); border-radius: var(--radius); margin: 8px 0 0;
+  padding: 10px 14px; font-size: 14px; line-height: 1.45; }
+.routine p { margin: 0; }
+.routine .r-full { display: none; }
+.photo-nudge { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 8px; padding: 10px 14px;
+  background: var(--card); border-radius: 14px; box-shadow: var(--shadow); font-weight: 600; text-align: left; }
+.photo-nudge span:last-child { margin-left: auto; color: var(--accent); }
+
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.tile { background: var(--card); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); min-width: 0; }
+.tile .label { font-size: 13px; color: var(--muted); font-weight: 600; }
+.tile .big { font-size: 30px; font-weight: 750; letter-spacing: -.02em; margin-top: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tile .sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.tile.warn { background: var(--warn-bg); } .tile.warn .big { color: var(--warn); }
+.tile.alert { background: var(--alert-bg); } .tile.alert .big { color: var(--alert); }
+.meals { display: flex; gap: 6px; margin-top: 8px; }
+.meals span { flex: 1; height: 10px; border-radius: 5px; background: var(--line); }
+.meals span.on { background: var(--ok); }
+
+.group-label { font-size: 13px; color: var(--muted); font-weight: 600; margin: 18px 4px 0; }
+.actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+.act { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 6px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; font-weight: 650; font-size: 15px; min-height: 92px;
+  transition: transform .08s; }
+.act:active { transform: scale(.96); }
+.act .e { font-size: 30px; line-height: 1; }
+.act.primary { background: var(--accent); color: var(--accent-ink); }
+.act.primary.soft { background: color-mix(in srgb, var(--accent) 18%, var(--card)); color: var(--ink); }
+.actions.other .act { min-height: 80px; font-size: 14px; }
+.actions.other .act .e { font-size: 26px; }
+.sheet { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+.sheet button { background: var(--alert-bg); color: var(--alert); border-radius: 14px; padding: 14px; font-weight: 650; }
+.sheet button.cancel { background: var(--card); color: var(--muted); }
+
+.counts { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { background: var(--card); border-radius: 999px; padding: 8px 14px; font-size: 14px; box-shadow: var(--shadow);
+  display: inline-flex; align-items: center; gap: 6px; }
+.chip b { font-variant-numeric: tabular-nums; }
+.list { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.row .t { font-variant-numeric: tabular-nums; color: var(--muted); width: 48px; font-size: 14px; flex: none; }
+.row .what { flex: 1; font-weight: 600; min-width: 0; }
+.row .what small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; margin-top: 1px; }
+.row .who { color: var(--muted); font-size: 13px; }
+.row .x { background: none; color: var(--muted); font-size: 18px; padding: 4px 8px; }
+.row button.what { text-align: left; background: none; padding: 0; }
+.empty { padding: 18px; color: var(--muted); text-align: center; }
+.tag { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+.tag.over { background: var(--alert-bg); color: var(--alert); } .tag.soon { background: var(--warn-bg); color: var(--warn); }
+.tag.ok { background: var(--ok-bg); color: var(--ok); }
+.done-btn { background: var(--ok-bg); color: var(--ok); border-radius: 10px; padding: 8px 12px; font-weight: 650; font-size: 14px; flex: none; }
+.form { display: grid; gap: 8px; margin-top: 10px; }
+.form .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.form .three { display: grid; grid-template-columns: 1.1fr 1.3fr auto; gap: 8px; }
+.btn { background: var(--accent); color: var(--accent-ink); border-radius: 12px; padding: 13px; font-weight: 650; }
+.btn.ghost { background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
+.btn.small { padding: 9px 12px; font-size: 14px; }
+.field { display: grid; gap: 6px; margin-bottom: 12px; } .field label { font-size: 13px; color: var(--muted); font-weight: 600; }
+.code { font-family: ui-monospace, Menlo, monospace; font-size: 14px; word-break: break-all; }
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 10px; }
+svg.chart { width: 100%; height: 120px; display: block; }
+
+/* coach suggestions */
+.coach { display: grid; gap: 10px; }
+.tip { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; border-left: 5px solid var(--line); }
+.tip.do { border-left-color: var(--accent); } .tip.soon { border-left-color: var(--warn); } .tip.info { border-left-color: var(--ok); }
+.tip h3 { font-size: 16px; }
+.tip p { margin: 4px 0 8px; font-size: 14px; line-height: 1.45; }
+.tip .foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tip .src { font-size: 12px; color: var(--muted); margin-right: auto; }
+.tip .later { background: none; color: var(--muted); font-size: 14px; padding: 8px; }
+
+/* food */
+.bar { height: 12px; border-radius: 6px; background: var(--line); overflow: hidden; margin: 8px 0 6px; }
+.bar > span { display: block; height: 100%; background: var(--ok); border-radius: 6px; }
+.bar.over > span { background: var(--alert); }
+
+/* training */
+.scores { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 10px; }
+.scores button { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px 0; font-weight: 700; font-size: 17px; }
+.scores button:active { background: var(--accent); color: var(--accent-ink); }
+.levels { display: flex; gap: 4px; margin-top: 8px; }
+.levels span { flex: 1; text-align: center; font-size: 11px; padding: 6px 2px; border-radius: 8px; background: var(--bg); color: var(--muted); }
+.levels span.on { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.levels span.done { background: var(--ok-bg); color: var(--ok); }
+.social { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.social button { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px; text-align: left;
+  font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; gap: 6px; align-items: center; }
+.social button b { background: var(--card); border-radius: 999px; padding: 1px 8px; font-size: 12px; }
+.social button.seen { border-color: var(--ok); }
+.hist { margin-top: 10px; font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.check input { width: 22px; height: 22px; }
+
+/* photos */
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+.grid button { padding: 0; background: var(--line); border-radius: 12px; overflow: hidden; aspect-ratio: 1; position: relative; }
+.grid img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.grid span { position: absolute; left: 6px; bottom: 6px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px;
+  font-weight: 600; padding: 2px 6px; border-radius: 6px; }
+.viewer { position: fixed; inset: 0; background: rgba(10,8,6,.96); z-index: 20; display: flex; flex-direction: column;
+  padding: calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 12px); color: #fff; }
+.viewer .imgs { flex: 1; display: flex; gap: 8px; align-items: center; justify-content: center; min-height: 0; }
+.viewer .imgs.compare { flex-direction: column; }
+@media (orientation: landscape) { .viewer .imgs.compare { flex-direction: row; } }
+.viewer figure { margin: 0; flex: 1; min-height: 0; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.viewer img { max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; border-radius: 10px; }
+.viewer figcaption { font-size: 13px; opacity: .8; margin-top: 6px; }
+.viewer .vbar { display: flex; gap: 8px; justify-content: space-between; align-items: center; padding-top: 10px; }
+.viewer .vbar button { background: rgba(255,255,255,.14); color: #fff; border-radius: 12px; padding: 12px 14px; font-weight: 600; }
+.viewer .vtop { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; font-weight: 650; }
+
+/* who picker */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 15; display: grid; place-items: center; padding: 20px; }
+.modal .box { background: var(--card); border-radius: 22px; padding: 22px; width: min(460px, 100%); box-shadow: 0 10px 40px rgba(0,0,0,.25); }
+.modal .people { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0 10px; }
+.modal .people button { border-radius: 18px; padding: 22px 10px; color: #fff; font-size: 20px; font-weight: 700; }
+
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--card);
+  border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
+nav.tabs button { flex: 1; background: none; padding: 10px 0 12px; font-size: 12px; color: var(--muted); font-weight: 600; position: relative; }
+nav.tabs button .e { display: block; font-size: 22px; margin-bottom: 2px; }
+nav.tabs button.on { color: var(--accent); }
+nav.tabs button.dot::after { content: ""; position: absolute; top: 8px; left: calc(50% + 10px); width: 9px; height: 9px;
+  border-radius: 50%; background: var(--accent); }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom));
+  background: var(--ink); color: var(--bg); padding: 12px 16px; border-radius: 14px; display: flex; gap: 14px;
+  align-items: center; font-weight: 600; z-index: 30; box-shadow: 0 6px 24px rgba(0,0,0,.2); width: max-content; max-width: calc(100vw - 32px); }
+.toast button { background: none; color: var(--accent); font-weight: 700; filter: brightness(1.4); flex: none; }
+
+#setup { max-width: 440px; margin: 10vh auto 0; }
+#setup h1 { font-size: 36px; margin: 0 0 6px; }
+#setup p { color: var(--muted); }
+
+/* ---------- iPad console ---------- */
+body.console { padding: max(12px, env(safe-area-inset-top)) 28px 12px; }
+body.console nav.tabs, body.console .tab-only, body.console #settings, body.console #train, body.console #photos,
+body.console #coachTodayWrap, body.console #byPerson, body.console #foodCard, body.console .phone-only { display: none !important; }
+body.console .clock { display: block; }
+body.console header { padding: 0 4px 2px; }
+body.console header h1 { font-size: 34px; }
+body.console .avatar { width: 56px; height: 56px; }
+body.console .demo { margin-top: 2px; padding: 4px 12px; font-size: 12px; }
+body.console main { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; align-items: start; }
+body.console #today, body.console #health, body.console #log { display: block !important; }
+body.console .nudge { font-size: 20px; padding: 12px 18px; }
+body.console .routine { font-size: 16px; padding: 12px 18px; }
+body.console .routine .r-short { display: none; }
+body.console .routine .r-full { display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px; row-gap: 4px; margin: 0; padding-left: 20px; }
+body.console .tile { padding: 10px 18px; }
+body.console .tile .big { font-size: 42px; }
+body.console .tile .label, body.console .tile .sub { font-size: 15px; }
+body.console .actions { margin-top: 6px; }
+body.console .actions.other { grid-template-columns: repeat(6, 1fr); }
+body.console .act { min-height: 72px; padding: 8px 6px; gap: 4px; }
+body.console .act .e { font-size: 26px; }
+body.console .group-label { margin-top: 8px; }
+body.console #today h2, body.console #health h2 { margin: 12px 4px 8px; }
+body.console #today .first-h2 { margin-top: 0; }
+body.console #health .phone-area { display: none; }
+body.console #timeline { max-height: 27vh; overflow: auto; }
+body.console #upcoming { max-height: 20vh; overflow: auto; }
+body.console .row { padding: 10px 14px; }
+body.console .row .x { display: none; }
+body.console #consoleTip .tip { padding: 10px 14px; }
+body.console #consoleTip .tip p { margin: 2px 0 0; }
+#consoleTip { display: none; }
+body.console #consoleTip { display: block; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<div id="setup" class="hidden">
+  <h1>🐾 Riley</h1>
+  <p>Set up this device. One person creates the household, then shares the link with the other phone and the iPad.</p>
+  <div class="field"><label for="setupName">Your name</label><input id="setupName" placeholder="e.g. Keith" autocomplete="given-name"></div>
+  <button class="btn" id="createHh" style="width:100%">Start a new household</button>
+  <h2>Or join one</h2>
+  <div class="field"><input id="joinCode" placeholder="Household code" autocapitalize="off"></div>
+  <button class="btn ghost" id="joinHh" style="width:100%">Join</button>
+  <div class="demo hidden" id="setupDemo">Demo mode: Firebase isn't configured yet, so data stays on this device only.</div>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <img class="avatar hidden" id="hdrPhoto" alt="">
+    <div class="title"><h1 id="dogName">Riley</h1><div class="age" id="age"></div></div>
+    <div class="clock" id="clock"></div>
+    <button class="iconbtn tab-only" id="viewToggle" title="Switch to console view" aria-label="Switch to console view">🖥️</button>
+    <button class="iconbtn tab-only" id="gear" title="Settings" aria-label="Settings">⚙️</button>
+  </header>
+  <div class="demo hidden" id="demoNote">Demo mode: add your Firebase config to sync between devices.</div>
+
+  <main>
+    <!-- ================= LOG ================= -->
+    <section id="log">
+      <div class="nudge calm" id="nudge"></div>
+      <div class="routine hidden" id="routine">
+        <p class="r-short"><b>“Outside”</b> → toilet spot → <b>“Busy busy”</b> → <b>“Good”</b> + treat, then play. Nothing in 5 min? Back in, tap <b>Nothing</b>.</p>
+        <ol class="r-full">
+          <li>Say <b>“Outside”</b>, go to his toilet spot – calm, boring</li>
+          <li>Say <b>“Busy busy”</b>, ignore him until he goes</li>
+          <li>As he finishes: <b>“Good”</b> + treat, <i>then</i> play</li>
+          <li>Nothing in 5 min? Back in, supervise, tap <b>Nothing</b></li>
+        </ol>
+      </div>
+      <button class="photo-nudge phone-only hidden" id="photoNudge"><span>📸</span><span>Today's photo not taken yet</span><span>Take it</span></button>
+      <div class="tiles">
+        <div class="tile" id="tOut"><div class="label">🚪 Next trip out</div><div class="big">–</div><div class="sub"></div></div>
+        <div class="tile" id="tPoo"><div class="label">💩 Since poo</div><div class="big">–</div><div class="sub"></div></div>
+        <div class="tile" id="tMeal"><div class="label">🍽️ Meals today</div><div class="big">–</div><div class="meals"></div><div class="sub"></div></div>
+        <div class="tile" id="tSleep"><div class="label">😴 Sleep</div><div class="big">–</div><div class="sub"></div></div>
+      </div>
+      <div id="actions">
+        <div class="group-label">Outside</div>
+        <div class="actions out">
+          <button class="act primary" data-type="wee"><span class="e">💧</span>Wee</button>
+          <button class="act primary" data-type="poo"><span class="e">💩</span>Poo</button>
+          <button class="act primary soft" data-type="out"><span class="e">🚪</span>Nothing</button>
+        </div>
+        <div class="group-label">Indoors</div>
+        <div class="actions other">
+          <button class="act" data-type="accident"><span class="e">⚠️</span>Accident</button>
+          <button class="act" data-type="meal"><span class="e">🍽️</span>Meal</button>
+          <button class="act" data-type="nap" id="napBtn"><span class="e">😴</span><span>Nap</span></button>
+          <button class="act" data-type="play"><span class="e">🎾</span>Play</button>
+          <button class="act" data-type="excited"><span class="e">🎉</span>Excited</button>
+          <button class="act" data-type="walk"><span class="e">🦮</span>Walk</button>
+        </div>
+      </div>
+      <div class="sheet hidden" id="accSheet">
+        <button data-acc="acc_wee">Wee indoors</button>
+        <button data-acc="acc_poo">Poo indoors</button>
+        <button class="cancel" data-acc="">Cancel</button>
+      </div>
+    </section>
+
+    <div>
+      <!-- ================= TODAY ================= -->
+      <section id="today" class="hidden">
+        <div id="coachTodayWrap"><h2 class="first-h2">Suggestions</h2><div class="coach" id="coachToday"></div></div>
+        <h2 class="first-h2">Today</h2>
+        <div class="counts" id="counts"></div>
+        <div class="counts" id="byPerson" style="margin-top:8px"></div>
+        <div id="foodCard">
+          <h2>Food</h2>
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <h3 id="foodToday">–</h3><span class="muted" id="foodPortion"></span>
+            </div>
+            <div class="bar" id="foodBar"><span style="width:0"></span></div>
+            <svg class="chart" id="foodChart" viewBox="0 0 300 100" preserveAspectRatio="none" style="height:90px"></svg>
+            <div class="muted" style="font-size:12px;display:flex;justify-content:space-between"><span>7 days ago</span><span>Today</span></div>
+          </div>
+        </div>
+        <h2>Timeline</h2>
+        <div class="list" id="timeline"></div>
+        <div id="consoleTip"></div>
+      </section>
+
+      <!-- ================= HEALTH ================= -->
+      <section id="health" class="hidden">
+        <h2>Coming up</h2>
+        <div class="list" id="upcoming"></div>
+        <div class="phone-area">
+          <h2>Ticks, fleas &amp; worms</h2>
+          <div id="treatments"></div>
+          <h2>Weight</h2>
+          <div class="list" style="padding:12px 14px">
+            <svg class="chart" id="wChart" viewBox="0 0 300 120" preserveAspectRatio="none"></svg>
+            <div id="wLatest" class="who" style="margin-top:6px"></div>
+          </div>
+          <div class="form"><div class="two">
+            <input id="wKg" type="number" step="0.01" inputmode="decimal" placeholder="Weight (kg)">
+            <button class="btn" id="wAdd">Log weight</button>
+          </div></div>
+          <h2>Add a reminder</h2>
+          <div class="form">
+            <div class="two">
+              <select id="hKind">
+                <option>Vaccination</option><option>Vet visit</option><option>Grooming</option><option>Microchip</option><option>Other</option>
+              </select>
+              <input id="hDate" type="date">
+            </div>
+            <input id="hTitle" placeholder="Note (optional), e.g. 2nd jab">
+            <button class="btn" id="hAdd">Add</button>
+          </div>
+          <h2>Done</h2>
+          <div class="list" id="doneList"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= TRAIN ================= -->
+    <section id="train" class="hidden">
+      <h2 class="first-h2">Suggestions</h2>
+      <div class="coach" id="coachTrain"></div>
+
+      <h2>Reflex to name</h2>
+      <div class="card">
+        <div class="muted" style="font-size:14px">5 treats in your pocket. Say his name brightly, and when he looks: “Good” + treat. How many of 5 did he get?</div>
+        <div class="levels" id="nameLevels"></div>
+        <div class="scores" id="nameScores">
+          <button data-s="0">0</button><button data-s="1">1</button><button data-s="2">2</button>
+          <button data-s="3">3</button><button data-s="4">4</button><button data-s="5">5</button>
+        </div>
+        <div class="hist" id="nameHist"></div>
+      </div>
+
+      <h2>Crate &amp; playpen</h2>
+      <div class="card">
+        <div class="muted" style="font-size:14px">Minutes with the door closed, and did he whine?</div>
+        <div class="form"><div class="three">
+          <input id="crateMin" type="number" min="1" max="240" inputmode="numeric" placeholder="Minutes">
+          <label class="check"><input type="checkbox" id="crateWhined"> Whined</label>
+          <button class="btn small" id="crateLog">Log</button>
+        </div></div>
+        <div class="hist" id="crateHist"></div>
+      </div>
+
+      <h2>Socialisation</h2>
+      <div class="card">
+        <div class="muted" style="font-size:14px">Tap when he meets something new. Keep it short and positive, and pair it with food.</div>
+        <div class="social" id="socialGrid"></div>
+        <div class="sheet hidden" id="socialSheet" style="grid-template-columns:1fr 1fr 1fr">
+          <button data-r="happy" style="background:var(--ok-bg);color:var(--ok)">😊 Happy</button>
+          <button data-r="unsure">😟 Unsure</button>
+          <button class="cancel" data-r="">Cancel</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PHOTOS ================= -->
+    <section id="photos" class="hidden">
+      <h2 class="first-h2">Photo a day</h2>
+      <div class="card">
+        <button class="btn" id="takePhoto" style="width:100%">📸 Take today's photo</button>
+        <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
+        <div class="muted" style="font-size:13px;margin-top:8px">Tip: use the same spot, side-on, at his eye level, so growth is easy to compare.</div>
+        <div class="two form" id="photoTools">
+          <button class="btn ghost small" id="playLapse">▶︎ Timelapse</button>
+          <button class="btn ghost small" id="compareFirst">First vs latest</button>
+        </div>
+      </div>
+      <div class="grid" id="photoGrid"></div>
+    </section>
+
+    <!-- ================= SETTINGS ================= -->
+    <section id="settings" class="hidden">
+      <h2 class="first-h2">This device</h2>
+      <div class="field"><label for="sMe">Who uses this phone</label><select id="sMe"></select></div>
+      <div class="field"><label for="sView">View</label>
+        <select id="sView"><option value="auto">Automatic</option><option value="phone">Phone</option><option value="console">Home console (iPad)</option></select></div>
+      <h2>Household</h2>
+      <div class="field"><label>The two of you (the iPad asks which one is logging)</label>
+        <div class="two form" style="margin:0"><input id="sM1" placeholder="Person 1"><input id="sM2" placeholder="Person 2"></div></div>
+      <div class="field"><label>Household code</label><div class="code" id="sCode"></div></div>
+      <button class="btn ghost" id="shareLink" style="width:100%;margin-bottom:12px">Share join link</button>
+      <h2>Puppy</h2>
+      <div class="field"><label for="sDog">Name</label><input id="sDog"></div>
+      <div class="two form" style="margin:0 0 12px">
+        <div class="field" style="margin:0"><label for="sDob">Birth date</label><input id="sDob" type="date"></div>
+        <div class="field" style="margin:0"><label for="sArr">Arrival date</label><input id="sArr" type="date"></div>
+      </div>
+      <div class="field"><label for="sSize">Expected adult size (tunes meal advice)</label>
+        <select id="sSize"><option value="toy">Toy (under 5 kg)</option><option value="small">Small (5–10 kg)</option>
+          <option value="medium">Medium (10–25 kg)</option><option value="large">Large (25–45 kg)</option><option value="giant">Giant (45 kg+)</option></select></div>
+      <h2>Food</h2>
+      <div class="two form" style="margin:0 0 12px">
+        <div class="field" style="margin:0"><label for="sMeals">Meals per day</label><input id="sMeals" type="number" min="1" max="6"></div>
+        <div class="field" style="margin:0"><label for="sGrams">Daily food (g, from bag)</label><input id="sGrams" type="number" min="0" max="2000" inputmode="numeric"></div>
+      </div>
+      <h2>Toilet</h2>
+      <div class="two form" style="margin:0 0 12px">
+        <div class="field" style="margin:0"><label for="sInt">Take out every (min)</label><input id="sInt" type="number" min="15" max="480" step="5"></div>
+        <div class="field" style="margin:0"><label for="sBed">Bedtime</label><input id="sBed" type="time"></div>
+      </div>
+      <h2>Treatments (days between doses)</h2>
+      <div class="two form" style="margin:0 0 12px">
+        <div class="field" style="margin:0"><label for="sWorm">Worming</label><input id="sWorm" type="number" min="7" max="180"></div>
+        <div class="field" style="margin:0"><label for="sFlea">Flea &amp; tick</label><input id="sFlea" type="number" min="7" max="180"></div>
+      </div>
+      <button class="btn" id="sSave" style="width:100%">Save</button>
+      <button class="btn ghost" id="leave" style="width:100%;margin-top:24px">Leave household on this device</button>
+    </section>
+  </main>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="log" class="on"><span class="e">🐾</span>Log</button>
+    <button data-tab="today"><span class="e">📋</span>Today</button>
+    <button data-tab="train"><span class="e">🎓</span>Train</button>
+    <button data-tab="health"><span class="e">💉</span>Health</button>
+    <button data-tab="photos"><span class="e">📸</span>Photos</button>
+  </nav>
+</div>
+
+<div class="modal hidden" id="whoModal" role="dialog" aria-label="Who is logging?">
+  <div class="box">
+    <h3 id="whoTitle">Who's logging?</h3>
+    <div class="people" id="whoPeople"></div>
+    <button class="btn ghost" id="whoCancel" style="width:100%">Cancel</button>
+  </div>
+</div>
+
+<div class="viewer hidden" id="viewer">
+  <div class="vtop"><span id="vTitle"></span><button id="vClose" style="background:none;color:#fff;font-size:26px">✕</button></div>
+  <div class="imgs" id="vImgs"></div>
+  <div class="vbar">
+    <button id="vPrev">‹ Older</button>
+    <button id="vCompare">Compare with first</button>
+    <button id="vNext">Newer ›</button>
+  </div>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
