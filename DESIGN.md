@@ -134,7 +134,7 @@ A warm cream and white base with one terracotta accent. Green, amber and red mea
 ### Named Rules
 **The One Voice Rule.** Terracotta is the only accent. If everything is terracotta, nothing is the next action.
 **The Status-Is-Tint Rule.** Status is a soft tinted background with a matching text colour, never a bare saturated block, so a late trip reads clearly without shouting.
-**The Token Rule.** Every colour lives in `:root` as a CSS variable, with dark and night overrides. No raw colour values elsewhere.
+**The Token Rule.** Every colour lives in `:root` as a CSS variable, with dark and night overrides. No raw colour values elsewhere. Beyond the palette above, `--on-media` (white text on photos, person colours and dark overlays), `--scrim`, `--scrim-caption`, `--viewer-bg` and `--viewer-btn` (overlays) and `--shadow-pop` and `--shadow-modal` cover the rest.
 **The People-Aren't-Status Rule.** The two person colours never carry status meaning, and status never relies on colour alone (it also has text and an icon or tag).
 
 ## Typography
@@ -176,7 +176,7 @@ A single, soft ambient shadow: white cards lift slightly off the cream page. Sha
 
 ## Shapes
 
-Rounded and friendly, with one dominant radius. **18px** (`--radius`) is the house corner for tiles, cards, nudges and the big log buttons. Controls inside cards step down to **12–14px** (inputs, small buttons, sheet buttons), tags and small buttons to **10px**, status pips to 5px, chips and tags to a full pill, and avatars, badges and icon buttons to circles. Modals are **22px**.
+Rounded and friendly, with one dominant radius. Tokens: `--radius` 18px, `--r-ctl-lg` 14px, `--r-ctl` 12px, `--r-sm` 10px, `--r-sheet` 22px, `--r-pill` 999px. **18px** (`--radius`) is the house corner for tiles, cards, nudges and the big log buttons. Controls inside cards step down to **12–14px** (inputs, small buttons, sheet buttons), tags and small buttons to **10px**, status pips to 5px, chips and tags to a full pill, and avatars, badges and icon buttons to circles. Modals are **22px**.
 
 ## Components
 
@@ -232,4 +232,3 @@ Rounded and friendly, with one dominant radius. **18px** (`--radius`) is the hou
 - The active tab label and links (terracotta on cream) are **3.91:1** at 12px: below AA.
 - OK green on its tint is **4.28:1** and warn amber on its tint is **4.39:1**: just below AA in light mode.
 - In dark mode, terracotta *text* on dark surfaces (the active tab, links, "Later" actions) is only **3.8–4.3:1**, because the accent isn't brightened for dark. The detector flags it.
-- Nine rules still use raw colour values outside `:root` (`#fff` on badges, photo captions, the viewer and the person picker; black-alpha overlays and shadows). They are listed for the `extract` step.
