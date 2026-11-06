@@ -136,7 +136,12 @@ function applyView() {
 }
 addEventListener("resize", () => ls.get("riley:view", "auto") === "auto" && applyView());
 $("#viewToggle").onclick = () => { ls.set("riley:view", "console"); applyView(); };
-$("#gear").onclick = () => showTab("settings");
+// On the console there is no Settings screen, so Settings switches this device to phone view (asks first, since the iPad is shared).
+function consoleToSettings() {
+  if (!confirm("Open Settings? This switches this device to phone view. Use the Console button to switch back.")) return;
+  ls.set("riley:view", "phone"); applyView(); showTab("settings");
+}
+$("#gear").onclick = () => (isConsole() ? consoleToSettings() : showTab("settings"));
 
 let wakeLock;
 async function keepAwake() {
@@ -936,7 +941,7 @@ $("#shareLink").onclick = async () => {
 };
 $("#leave").onclick = () => { if (confirm("Leave this household on this device? The data stays for everyone else.")) { ls.del("riley:hh"); location.reload(); } };
 // Tap the clock on the console to get back to phone view (for settings)
-$("#clock").onclick = () => { if (confirm("Switch this device to phone view (for settings)?")) { ls.set("riley:view", "phone"); applyView(); } };
+$("#clock").onclick = consoleToSettings;
 
 // =====================================================================
 // Boot (last, so everything above is defined)
