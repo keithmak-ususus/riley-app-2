@@ -7,19 +7,19 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Riley">
-<meta name="theme-color" content="#FBF7F1">
+<meta name="theme-color" content="#FFFFFF">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-512.png">
 <link rel="icon" href="icon-512.png">
 <title>Riley</title>
 <style>
 :root {
-  --bg: #FBF7F1; --card: #FFFFFF; --ink: #2A2420; --muted: #7A6F66; --line: #E9E1D7;
+  --bg: #FFFFFF; --card: #FFFFFF; --ink: #2A2420; --muted: #7A6F66; --line: #E8E4DF;
   --accent: #B5532F; --accent-text: #B5532F; --accent-ink: #FFFFFF; --ok: #36714F; --ok-bg: #E7F2EB;  /* accent = fills, accent-text = text on the page */
   --warn: #8F5C10; --warn-bg: #FBEFD9; --alert: #B83A2E; --alert-bg: #FBE4E1;
   --p1: #2F6DB5; --p2: #A8457A;   /* the two household members */
-  --radius: 18px; --shadow: 0 1px 2px rgba(42,36,32,.06), 0 4px 14px rgba(42,36,32,.05);
-  --r-ctl: 12px; --r-ctl-lg: 14px; --r-sm: 10px; --r-sheet: 22px; --r-pill: 999px;  /* control, large control, small, modal, pill */
+  --radius: 12px; --shadow: none;
+  --r-ctl: 10px; --r-ctl-lg: 12px; --r-sm: 8px; --r-sheet: 16px; --r-pill: 999px;  /* control, large control, small, modal, pill */
   --on-media: #FFFFFF;                                  /* text on photos, person colours and dark overlays */
   --scrim: rgba(0,0,0,.35); --scrim-caption: rgba(0,0,0,.55);  /* behind modals / under photo captions */
   --viewer-bg: rgba(10,8,6,.96); --viewer-btn: rgba(255,255,255,.14);
@@ -40,7 +40,7 @@ body { padding: env(safe-area-inset-top) 16px calc(84px + env(safe-area-inset-bo
 button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 input, select, textarea { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line);
   border-radius: var(--r-ctl); padding: 12px; width: 100%; }
-h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 24px 4px 10px; }
+h2 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 32px 4px 8px; }
 h3 { font-size: 17px; margin: 0 0 4px; }
 a { color: inherit; }
 :focus-visible { outline: 3px solid var(--accent-text); outline-offset: 2px; }
@@ -50,11 +50,11 @@ a { color: inherit; }
 
 header { display: flex; align-items: center; gap: 12px; padding: 16px 4px 8px; }
 header .title { flex: 1; min-width: 0; }
-header h1 { margin: 0; font-size: 30px; letter-spacing: -.02em; }
+header h1 { margin: 0; font-size: 26px; font-weight: 650; letter-spacing: -.02em; }
 header .age { color: var(--muted); font-size: 14px; margin-top: 2px; }
-.avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; box-shadow: var(--shadow); background: var(--line); }
+.avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: var(--line); }
 .clock { font-size: 40px; font-weight: 700; font-variant-numeric: tabular-nums; display: none; }
-.iconbtn { background: var(--card); width: 44px; height: 44px; border-radius: 50%; box-shadow: var(--shadow); font-size: 20px; flex: none; }
+.iconbtn { background: none; min-width: 44px; height: 44px; padding: 0 8px; border-radius: var(--r-ctl); color: var(--muted); font-size: 14px; font-weight: 600; flex: none; }
 
 /* person badges */
 .badge { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: var(--on-media);
@@ -63,53 +63,51 @@ header .age { color: var(--muted); font-size: 14px; margin-top: 2px; }
 .byline { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
 
 .nudge { background: var(--alert-bg); color: var(--alert); border-radius: var(--radius); padding: 14px 16px;
-  font-weight: 650; font-size: 17px; margin: 8px 0 4px; }
-.nudge.calm { background: var(--ok-bg); color: var(--ok); }
+  font-weight: 600; font-size: 17px; margin: 8px 0 4px; }
+.nudge.calm { background: none; color: var(--ink); padding: 8px 4px; font-size: 19px; }
 .nudge.warn { background: var(--warn-bg); color: var(--warn); }
-.routine { background: var(--card); box-shadow: var(--shadow); border-radius: var(--radius); margin: 8px 0 0;
-  padding: 10px 14px; font-size: 14px; line-height: 1.45; }
+.routine { color: var(--muted); margin: 0; padding: 0 4px; font-size: 14px; line-height: 1.5; }
 .routine p { margin: 0; }
 .routine .r-full { display: none; }
 .photo-nudge { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 8px; padding: 10px 14px;
-  background: var(--card); border-radius: var(--r-ctl-lg); box-shadow: var(--shadow); font-weight: 600; text-align: left; }
+  background: none; border: 1px solid var(--line); border-radius: var(--r-ctl-lg); font-weight: 500; text-align: left; }
 .photo-nudge span:last-child { margin-left: auto; color: var(--accent-text); }
 
-.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-.tile { background: var(--card); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); min-width: 0; }
-.tile .label { font-size: 13px; color: var(--muted); font-weight: 600; }
-.tile .big { font-size: 30px; font-weight: 750; letter-spacing: -.02em; margin-top: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; margin-top: 16px; }
+.tile { border-top: 1px solid var(--line); border-radius: 0; padding: 14px 4px 16px; min-width: 0; }
+.tile .label { font-size: 13px; color: var(--muted); font-weight: 500; }
+.tile .big { font-size: 32px; font-weight: 600; letter-spacing: -.02em; margin-top: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .tile .sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
-.tile.warn { background: var(--warn-bg); } .tile.warn .big { color: var(--warn); }
-.tile.alert { background: var(--alert-bg); } .tile.alert .big { color: var(--alert); }
+.tile.warn .big { color: var(--warn); }
+.tile.alert .big { color: var(--alert); }
 .meals { display: flex; gap: 6px; margin-top: 8px; }
-.meals span { flex: 1; height: 10px; border-radius: 5px; background: var(--line); }
+.meals span { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
 .meals span.on { background: var(--ok); }
 
-.group-label { font-size: 13px; color: var(--muted); font-weight: 600; margin: 18px 4px 0; }
+.group-label { font-size: 13px; color: var(--muted); font-weight: 500; margin: 24px 4px 0; }
 .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-.act { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 6px 12px;
-  display: flex; flex-direction: column; align-items: center; gap: 6px; font-weight: 650; font-size: 15px; min-height: 92px;
+.act { background: none; border: 1.5px solid var(--line); border-radius: var(--radius); padding: 12px 6px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-weight: 600; font-size: 16px; min-height: 88px;
   transition: transform .08s; }
 .act:active { transform: scale(.96); }
-.act .e { font-size: 30px; line-height: 1; }
-.act.primary { background: var(--accent); color: var(--accent-ink); }
-.act.primary.soft { background: color-mix(in srgb, var(--accent) 18%, var(--card)); color: var(--ink); }
-.actions.other .act { min-height: 80px; font-size: 14px; }
-.actions.other .act .e { font-size: 26px; }
+.act .e { display: none; }
+.act.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.act.primary.soft { background: none; border-color: var(--line); color: var(--ink); }
+.actions.other .act { min-height: 64px; font-size: 15px; font-weight: 500; }
 .sheet { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
 .sheet button { background: var(--alert-bg); color: var(--alert); border-radius: var(--r-ctl-lg); padding: 14px; font-weight: 650; }
 .sheet button.cancel { background: var(--card); color: var(--muted); }
 
 .counts { display: flex; gap: 8px; flex-wrap: wrap; }
-.chip { background: var(--card); border-radius: var(--r-pill); padding: 8px 14px; font-size: 14px; box-shadow: var(--shadow);
+.chip { border: 1px solid var(--line); border-radius: var(--r-pill); padding: 8px 14px; font-size: 14px;
   display: inline-flex; align-items: center; gap: 6px; }
 .chip b { font-variant-numeric: tabular-nums; }
-.list { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-.row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--line); }
-.row:first-child { border-top: 0; }
+.list { overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 1px solid var(--line); }
 .row .what { min-height: 44px; display: flex; flex-direction: column; justify-content: center; }
 .row .t { font-variant-numeric: tabular-nums; color: var(--muted); width: 48px; font-size: 14px; flex: none; }
-.row .what { flex: 1; font-weight: 600; min-width: 0; }
+.row .what { flex: 1; font-weight: 500; min-width: 0; }
 .row .what small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; margin-top: 1px; }
 .row .who { color: var(--muted); font-size: 13px; }
 .row .x { background: none; color: var(--muted); font-size: 18px; padding: 4px 8px; min-width: 44px; min-height: 44px; }
@@ -122,22 +120,22 @@ header .age { color: var(--muted); font-size: 14px; margin-top: 2px; }
 .form { display: grid; gap: 8px; margin-top: 10px; }
 .form .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .form .three { display: grid; grid-template-columns: 1.1fr 1.3fr auto; gap: 8px; }
-.btn { background: var(--accent); color: var(--accent-ink); border-radius: var(--r-ctl); padding: 13px; font-weight: 650; }
-.btn.ghost { background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
+.btn { background: var(--accent); color: var(--accent-ink); border-radius: var(--r-ctl); padding: 13px; font-weight: 600; }
+.btn.ghost { background: none; color: var(--ink); border: 1.5px solid var(--line); }
 .btn.small { padding: 9px 12px; font-size: 14px; min-height: 44px; }
 .field { display: grid; gap: 6px; margin-bottom: 12px; } .field label { font-size: 13px; color: var(--muted); font-weight: 600; }
 .code { font-family: ui-monospace, Menlo, monospace; font-size: 14px; word-break: break-all; }
-.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 10px; }
+.card { border-top: 1px solid var(--line); padding: 14px 4px; margin-bottom: 4px; }
 svg.chart { width: 100%; height: 120px; display: block; }
 
 /* coach suggestions */
 .coach { display: grid; gap: 10px; }
-.tip { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; }
+.tip { border-top: 1px solid var(--line); padding: 14px 4px; }
 .tip .tiptitle { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .tip .tiptitle .tag { flex: none; margin-top: 2px; }
 .tag.do { background: var(--accent); color: var(--accent-ink); }
 .coach .more { width: 100%; min-height: 48px; }
-.tip h3 { font-size: 16px; }
+.tip h3 { font-size: 16px; font-weight: 600; }
 .tip p { margin: 4px 0 8px; font-size: 14px; line-height: 1.45; }
 .tip .foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .tip .src { font-size: 12px; color: var(--muted); margin-right: auto; }
@@ -186,11 +184,11 @@ svg.chart { width: 100%; height: 120px; display: block; }
 
 /* who picker */
 .modal { position: fixed; inset: 0; background: var(--scrim); z-index: 15; display: grid; place-items: center; padding: 20px; }
-.modal .box { background: var(--card); border-radius: var(--r-sheet); padding: 22px; width: min(460px, 100%); box-shadow: var(--shadow-modal); }
+.modal .box { background: var(--card); border-radius: var(--r-sheet); padding: 22px; width: min(460px, 100%); border: 1px solid var(--line); }
 .whenGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 10px; }
 .whenGrid button { background: var(--accent); color: var(--accent-ink); border-radius: var(--r-ctl-lg); min-height: 56px; font-weight: 650; }
-.whenGrid button[data-min="0"], .whenGrid button[data-min="pick"] { background: var(--bg); color: var(--ink); border: 2px solid var(--line); }
-.modal .btn.ghost { background: var(--bg); border: 2px solid var(--line); box-shadow: none; }
+.whenGrid button[data-min="0"], .whenGrid button[data-min="pick"] { background: none; color: var(--ink); border: 1.5px solid var(--line); }
+.modal .btn.ghost { background: none; border: 1.5px solid var(--line); }
 .timeRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 10px; }
 .timeRow .btn, #whenCancel { min-height: 48px; }
 .efield { display: block; font-size: 13px; color: var(--muted); font-weight: 600; margin: 12px 0; }
@@ -200,14 +198,15 @@ svg.chart { width: 100%; height: 120px; display: block; }
 .group-label.has-hint { display: flex; align-items: center; }
 .act { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
 .modal .people { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0 10px; }
-.modal .people button { border-radius: 18px; padding: 22px 10px; color: var(--on-media); font-size: 20px; font-weight: 700; }
+.modal .people button { border-radius: var(--radius); padding: 22px 10px; color: var(--on-media); font-size: 20px; font-weight: 700; }
 
 nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--card);
   border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
-nav.tabs button { flex: 1; background: none; padding: 10px 0 12px; font-size: 12px; color: var(--muted); font-weight: 600; position: relative; }
-nav.tabs button .e { display: block; font-size: 22px; margin-bottom: 2px; }
-nav.tabs button.on { color: var(--accent-text); }
-nav.tabs button.dot::after { content: ""; position: absolute; top: 8px; left: calc(50% + 10px); width: 9px; height: 9px;
+nav.tabs button { flex: 1; background: none; min-height: 56px; padding: 0; font-size: 14px; color: var(--muted); font-weight: 500; position: relative; }
+nav.tabs button .e { display: none; }
+nav.tabs button.on { color: var(--ink); font-weight: 650; }
+nav.tabs button.on::before { content: ""; position: absolute; top: -1px; left: 30%; right: 30%; height: 2px; background: var(--accent); }
+nav.tabs button.dot::after { content: ""; position: absolute; top: 14px; left: calc(50% + 24px); width: 7px; height: 7px;
   border-radius: 50%; background: var(--accent); }
 
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom));
@@ -305,8 +304,8 @@ body.console #consoleTip { display: block; margin-top: 10px; }
     <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" class="avatar hidden" id="hdrPhoto" alt="">
     <div class="title"><h1 id="dogName">Riley</h1><div class="age" id="age"></div></div>
     <div class="clock" id="clock"></div>
-    <button class="iconbtn tab-only" id="viewToggle" title="Switch to console view" aria-label="Switch to console view">🖥️</button>
-    <button class="iconbtn tab-only" id="gear" title="Settings" aria-label="Settings">⚙️</button>
+    <button class="iconbtn tab-only" id="viewToggle" title="Switch to console view" aria-label="Switch to console view">Console</button>
+    <button class="iconbtn tab-only" id="gear" title="Settings" aria-label="Settings">Settings</button>
   </header>
   <div class="demo hidden" id="demoNote">Demo mode: add your Firebase config to sync between devices.</div>
 
@@ -323,12 +322,12 @@ body.console #consoleTip { display: block; margin-top: 10px; }
           <li>Nothing in 5 min? Back in, supervise, tap <b>Nothing</b></li>
         </ol>
       </div>
-      <button class="photo-nudge phone-only hidden" id="photoNudge"><span>📸</span><span>Today's photo not taken yet</span><span>Take it</span></button>
+      <button class="photo-nudge phone-only hidden" id="photoNudge"><span>Today's photo not taken yet</span><span>Take it</span></button>
       <div class="tiles">
-        <div class="tile" id="tOut"><div class="label">🚪 Next trip out</div><div class="big">–</div><div class="sub"></div></div>
-        <div class="tile" id="tPoo"><div class="label">💩 Since poo</div><div class="big">–</div><div class="sub"></div></div>
-        <div class="tile" id="tMeal"><div class="label">🍽️ Meals today</div><div class="big">–</div><div class="meals"></div><div class="sub"></div></div>
-        <div class="tile" id="tSleep"><div class="label">😴 Sleep</div><div class="big">–</div><div class="sub"></div></div>
+        <div class="tile" id="tOut"><div class="label">Next trip out</div><div class="big">–</div><div class="sub"></div></div>
+        <div class="tile" id="tPoo"><div class="label">Since poo</div><div class="big">–</div><div class="sub"></div></div>
+        <div class="tile" id="tMeal"><div class="label">Meals today</div><div class="big">–</div><div class="meals"></div><div class="sub"></div></div>
+        <div class="tile" id="tSleep"><div class="label">Sleep</div><div class="big">–</div><div class="sub"></div></div>
       </div>
       <div id="actions">
         <div class="group-label has-hint">Outside<span class="earlier" id="earlierHint">Hold a button to log earlier</span></div>

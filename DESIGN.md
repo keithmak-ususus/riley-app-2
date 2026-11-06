@@ -1,8 +1,8 @@
 ---
 name: Riley
-description: A warm, big-target household noticeboard for a new puppy, glanceable at 6am.
+description: A minimal, flat, big-target household log for a new puppy, glanceable at 6am.
 colors:
-  cream: "#FBF7F1"
+  cream: "#FFFFFF"
   card-white: "#FFFFFF"
   cream-dark: "#1A1714"
   card-dark: "#26211D"
@@ -10,7 +10,7 @@ colors:
   night-bg: "#0F0D0B"
   ink: "#2A2420"
   muted: "#7A6F66"
-  line: "#E9E1D7"
+  line: "#E8E4DF"
   terracotta: "#B5532F"
   terracotta-on-dark: "#D9774F"
   terracotta-ink: "#FFFFFF"
@@ -25,14 +25,14 @@ colors:
 typography:
   display:
     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'Segoe UI', Roboto, sans-serif"
-    fontSize: "30px"
-    fontWeight: 750
+    fontSize: "32px"
+    fontWeight: 600
     lineHeight: 1.1
     letterSpacing: "-0.02em"
   headline:
     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'Segoe UI', Roboto, sans-serif"
-    fontSize: "30px"
-    fontWeight: 700
+    fontSize: "26px"
+    fontWeight: 650
     letterSpacing: "-0.02em"
   title:
     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'Segoe UI', Roboto, sans-serif"
@@ -82,13 +82,13 @@ typography:
     fontWeight: 400
 rounded:
   chip: "999px"
-  sheet: "22px"
-  card: "18px"
-  button-sm: "12px"
-  tag: "10px"
+  sheet: "16px"
+  card: "12px"
+  button-sm: "10px"
+  tag: "8px"
   level: "8px"
   bar: "6px"
-  pip: "5px"
+  pip: "2px"
 spacing:
   tight: "6px"
   gap: "10px"
@@ -133,11 +133,11 @@ components:
 
 ## Overview
 
-**Creative North Star: "The Kitchen Noticeboard"**
+**Creative North Star: "The Kitchen Noticeboard"** (minimal pass: flat, white, one accent)**
 
 The app is a warm, well-lit household noticeboard. It is pinned to the kitchen wall on the iPad and sits in a pocket on two phones. One clear next action, plain big figures, and everything attributed to a person so nobody has to ask "when did he last go out?". It is practical before it is cute, and calm before it is clever. It is used one-handed, in the garden, at 6am, by tired people, so nothing is small, quiet or slow.
 
-Density is low and the hit targets are large. Colour is warm cream and a single terracotta accent, with soft green, amber and red reserved for status. Depth is a gentle ambient lift, not a drop-shadow showpiece. The type is the platform's own rounded system font, large where it carries a number.
+**Minimal means subtraction.** There are no shadows, no card fills, no emoji icons and no tinted panels except when something needs attention. Structure comes from white space, hairline dividers (`--line`) and type size. The only filled shapes are the two Outside log buttons (terracotta), a warn or alert banner, and the primary button. Everything else is outlined or plain text. Tabs, log buttons, tiles and counts carry words only.
 
 **Key Characteristics:**
 - One next action is always the loudest thing on the screen.
@@ -204,51 +204,46 @@ Spacing rhythm is tight and consistent: 6px between pips, 10px between tiles and
 
 ## Elevation & Depth
 
-A single, soft ambient shadow: white cards lift slightly off the cream page. Shadow is ambient, never structural, and never coloured. Toasts and modals sit higher with a deeper shadow. Pressed buttons shrink to 96% and are not given extra shadow.
-
-### Shadow Vocabulary
-- **Card lift** (`box-shadow: 0 1px 2px rgba(42,36,32,.06), 0 4px 14px rgba(42,36,32,.05)`): tiles, cards, list containers, ghost buttons, chips, the avatar.
-- **Toast** (`box-shadow: 0 6px 24px rgba(0,0,0,.2)`): the confirmation toast.
-- **Modal** (`box-shadow: 0 10px 40px rgba(0,0,0,.25)`): who-is-logging and when-did-it-happen sheets.
+Flat. `--shadow` is `none`; separation is a 1px `--line` hairline, never a shadow. Only the toast and modals sit above the page (modals have a hairline border and a scrim; the toast keeps `--shadow-pop`).
 
 ### Named Rules
-**The Ambient-Only Rule.** Shadow is a gentle lift, never a border substitute or a colour. Nothing glows.
+**The Flat Rule.** No card fills, no drop shadows, no glow. If something needs to stand apart, give it space or a hairline.
 
 ## Shapes
 
-Rounded and friendly, with one dominant radius. Tokens: `--radius` 18px, `--r-ctl-lg` 14px, `--r-ctl` 12px, `--r-sm` 10px, `--r-sheet` 22px, `--r-pill` 999px. **18px** (`--radius`) is the house corner for tiles, cards, nudges and the big log buttons. Controls inside cards step down to **12–14px** (inputs, small buttons, sheet buttons), tags and small buttons to **10px**, status pips to 5px, chips and tags to a full pill, and avatars, badges and icon buttons to circles. Modals are **22px**.
+Quietly rounded, one dominant radius. Tokens: `--radius` 12px (log buttons, banners), `--r-ctl-lg` 12px, `--r-ctl` 10px (inputs, small buttons), `--r-sm` 8px, `--r-sheet` 16px (modals), `--r-pill` 999px (chips, tags). Avatars and badges are circles.
 
 ## Components
 
 ### Primary log button
-- **Shape:** 18px corners, at least 92px tall on phones (80px for the indoor row, 72px on the console).
-- **Colour:** terracotta with white text for the Outside actions; the "Nothing" action is a soft terracotta tint with ink text; the Indoors actions are white cards.
-- **Behaviour:** emoji above a bold 14–15px label; pressed state scales to 96%. Long-press (about 0.5s) opens the "When?" sheet; a tap logs "now".
+- **Shape:** 12px corners, at least 88px tall on phones (64px for the indoor row, 72px on the console). Words only, no emoji.
+- **Colour:** terracotta with white text for Wee and Poo; "Nothing" and every Indoors action are outlined (1.5px `--line`) with ink text.
+- **Behaviour:** a 15–16px label; pressed state scales to 96%. Long-press (about 0.5s) opens the "When?" sheet; a tap logs "now".
 
 ### Tile
-- **Style:** white card, 18px corners, card lift, 14×16px padding. A quiet 13px label, a Display figure, a muted sub-line.
+- **Style:** no card: a hairline above, 14px padding. A quiet 13px label, a 32px Display figure (42px on the console), a muted sub-line.
 - **States:** `warn` and `alert` swap to the tinted status background and colour the figure.
 
 ### Nudge (the next-action banner)
-- **Style:** a full-width tinted banner, 17px bold. Calm = green, warn = amber, alert = red. On the console it grows to 20px.
+- **Style:** calm is plain 19px ink text with no background; warn (amber) and alert (red) are tinted banners. On the console it grows to 20px.
 
 ### Coach tip
-- **Style:** white card with a title, a small level tag beside the title (solid terracotta "To do", amber "Soon", green "Good to know"), a short body and a muted source credit. No coloured side border. Actions and "Not now" are at least 44px.
+- **Style:** hairline above, a title with a small level tag (solid terracotta "To do", amber "Soon", green "Good to know"), a short body and a muted source credit. Actions and "Not now" are at least 44px.
 
 ### Chip and tag
-- **Style:** pill, white with card lift for counts; tags are small tinted status pills (over, soon, ok).
+- **Style:** outlined pill (1px `--line`) for counts; tags are small tinted status pills (over, soon, ok).
 
 ### Tab bar
-- **Style:** fixed bottom bar with five equal buttons (emoji over a 12px label); the active tab is terracotta; a small dot marks something waiting.
+- **Style:** fixed bottom bar with five text-only buttons; the active tab is ink and bold with a 2px terracotta bar above it; a small dot marks something waiting.
 
 ### Toast
 - **Style:** inverted pill (ink background, cream text), 14px corners, with an Undo or Edit action; floats above the tab bar.
 
 ### Modal / sheet
-- **Style:** dimmed backdrop; a 22px-cornered card; large buttons (min 48–56px); the person picker uses the person colours.
+- **Style:** dimmed backdrop; a 16px-cornered hairline-bordered card; large buttons (min 48–56px); the person picker uses the person colours.
 
 ### Inputs
-- **Style:** card-coloured field, 1px line border, 12px corners, 12px padding; labels are 13px muted above.
+- **Style:** 1px line border, 10px corners, 12px padding; labels are 13px muted above.
 
 ## Do's and Don'ts
 
@@ -256,6 +251,7 @@ Rounded and friendly, with one dominant radius. Tokens: `--radius` 18px, `--r-ct
 - **Do** keep every touch target at least 44px, and the main log buttons far larger.
 - **Do** make the next action the largest thing on the screen, using Display figures with tabular numerals.
 - **Do** show status with a tinted background *and* words or an icon.
+- **Do** keep it minimal: words over icons, hairlines over boxes, space over decoration.
 - **Do** use the CSS variables for every colour, and check the dark and the console night modes after any change.
 - **Do** keep the console to one screen, with no page scroll, at 1180×820.
 - **Do** write neutral, kind copy. An accident is just an accident.
@@ -263,7 +259,7 @@ Rounded and friendly, with one dominant radius. Tokens: `--radius` 18px, `--r-ct
 ### Don't
 - **Don't** add a second accent colour, or use the person colours for status.
 - **Don't** put raw colour values outside `:root`.
-- **Don't** use shadows as borders, add glow, or mark cards with a coloured side border.
+- **Don't** add shadows, card fills, glow, emoji icons or coloured side borders.
 - **Don't** use "bad", "naughty" or "no!" anywhere, or any language that scolds the puppy.
 - **Don't** hide the primary action behind a menu or a multi-step flow. Logging stays one tap.
 

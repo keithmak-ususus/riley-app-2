@@ -202,7 +202,7 @@ function toast(msg, buttons = [], ms = 5000) {
 const portion = () => (shared.dailyGrams ? Math.round(shared.dailyGrams / Math.max(1, shared.mealsPerDay || 4)) : 0);
 
 async function log(type, at = Date.now()) {
-  const by = await who(`${EMOJI[type]} ${LABEL[type]} – who's logging?`);
+  const by = await who(`${LABEL[type]} – who's logging?`);
   if (by === null) return;
   const ev = { type, at, by };
   if (type === "meal" && portion()) ev.grams = portion();
@@ -211,9 +211,9 @@ async function log(type, at = Date.now()) {
   const undo = ["Undo", () => store.remove("events", id)];
   const when = Date.now() - at > MIN ? ` at ${hm(at)}` : "";
   if (type.startsWith("acc_")) toast(`Logged${when} – no telling off. Enzymatic cleaner, no bleach or ammonia`, [undo], 8000);
-  else if (type === "out") toast(`🚪 Logged${when} – supervise closely, try again in 10–15 min`, [undo], 8000);
-  else if (type === "meal") toast(`🍽️ Meal${ev.grams ? ` · ${ev.grams} g` : ""} logged${when}`, [undo, ["Edit", () => editEntry({ id, ...ev })]], 6000);
-  else toast(`${EMOJI[type]} ${LABEL[type]} logged${when}`, [undo]);
+  else if (type === "out") toast(`Logged${when} – supervise closely, try again in 10–15 min`, [undo], 8000);
+  else if (type === "meal") toast(`Meal${ev.grams ? ` · ${ev.grams} g` : ""} logged${when}`, [undo, ["Edit", () => editEntry({ id, ...ev })]], 6000);
+  else toast(`${LABEL[type]} logged${when}`, [undo]);
 }
 
 // ---------- log something that happened earlier ----------
@@ -251,7 +251,7 @@ function askWhen(title) {
 // Edit an existing entry's time (and grams, for meals). Keeps the entry on its original day.
 function editEntry(ev) {
   const modal = $("#editModal"), err = $("#editErr"), isMeal = ev.type === "meal";
-  $("#editTitle").textContent = `${EMOJI[ev.type] || ""} ${LABEL[ev.type] || ev.type}`;
+  $("#editTitle").textContent = `${LABEL[ev.type] || ev.type}`;
   $("#editTime").value = hm(ev.at);
   $("#editGramsWrap").classList.toggle("hidden", !isMeal);
   $("#editGrams").value = ev.grams ?? portion() ?? "";
@@ -310,17 +310,17 @@ $("#accSheet").onclick = (e) => {
 holdable($("#actions"), async (b) => {
   const t = b.dataset.type; if (!t) return;
   if (t === "accident") {
-    const at = await askWhen("⚠️ Accident – when?");
+    const at = await askWhen("Accident – when?");
     if (at !== null) { accAt = at; $("#accSheet").classList.remove("hidden"); }
     return;
   }
   const type = t === "nap" ? (isAsleep() ? "wake" : "sleep") : t;
-  const at = await askWhen(`${EMOJI[type]} ${LABEL[type]} – when?`);
+  const at = await askWhen(`${LABEL[type]} – when?`);
   if (at !== null) log(type, at);
 });
 holdable($("#accSheet"), async (b) => {
   const v = b.dataset.acc; if (!v) return;
-  const at = await askWhen(`⚠️ ${LABEL[v]} – when?`);
+  const at = await askWhen(`${LABEL[v]} – when?`);
   if (at !== null) { $("#accSheet").classList.add("hidden"); accAt = null; log(v, at); }
 });
 
@@ -487,7 +487,7 @@ function render() {
 
   // Sleep
   const tsl = $("#tSleep");
-  tsl.querySelector(".label").textContent = asleep ? "😴 Asleep for" : "☀️ Awake for";
+  tsl.querySelector(".label").textContent = asleep ? "Asleep for" : "Awake for";
   tsl.querySelector(".big").textContent = ls_ ? ago(now - ls_.at) : "–";
   tsl.querySelector(".sub").textContent = `${ago(sleepToday())} sleep today`;
   const nb = $("#napBtn"); nb.querySelector(".e").textContent = asleep ? "☀️" : "😴"; nb.lastElementChild.textContent = asleep ? "Woke up" : "Nap";
@@ -529,8 +529,8 @@ function renderToday() {
   const c = (ty, list = t) => list.filter((e) => ty.includes(e.type)).length;
   const outside = c(["wee", "poo"]), acc = c(["acc_wee", "acc_poo"]);
   $("#counts").innerHTML = [
-    ["🚪 Trips out", c(OUT_TYPES)], ["💧 Wees outside", c(["wee"])], ["💩 Poos outside", c(["poo"])],
-    ["⚠️ Accidents", acc], ["✅ Went outside", outside + acc ? `${Math.round((100 * outside) / (outside + acc))}%` : "–"],
+    ["Trips out", c(OUT_TYPES)], ["Wees outside", c(["wee"])], ["Poos outside", c(["poo"])],
+    ["Accidents", acc], ["Went outside", outside + acc ? `${Math.round((100 * outside) / (outside + acc))}%` : "–"],
   ].map(([l, v]) => `<span class="chip">${l} <b>${v}</b></span>`).join("");
 
   // who did what today
@@ -548,7 +548,7 @@ function renderToday() {
     const isMeal = e.type === "meal";
     const hint = isMeal ? "Tap to edit time or grams" : i === 0 ? "Tap to edit time" : "";
     row.innerHTML = `<span class="t">${hm(e.at)}</span>
-      <button class="what">${EMOJI[e.type] || ""} ${esc(LABEL[e.type] || e.type)}${isMeal && e.grams ? ` · ${e.grams} g` : ""}${hint ? `<small>${hint}</small>` : ""}</button>
+      <button class="what">${esc(LABEL[e.type] || e.type)}${isMeal && e.grams ? ` · ${e.grams} g` : ""}${hint ? `<small>${hint}</small>` : ""}</button>
       ${byline(e.by)}<button class="x" aria-label="Delete">×</button>`;
     row.querySelector(".what").onclick = () => editEntry(e);
     row.querySelector(".x").onclick = () => confirm(`Delete "${LABEL[e.type]}" at ${hm(e.at)}?`) && store.remove("events", e.id);
@@ -738,7 +738,7 @@ function renderPhotos() {
     grid.append(b);
   });
   $("#photoTools").classList.toggle("hidden", photos.length < 2);
-  $("#takePhoto").textContent = photos.some((p) => p.day === dayKey(Date.now())) ? "📸 Retake today's photo" : "📸 Take today's photo";
+  $("#takePhoto").textContent = photos.some((p) => p.day === dayKey(Date.now())) ? "Retake today's photo" : "Take today's photo";
 }
 function weightNear(ms) {
   let best = null;
@@ -761,7 +761,7 @@ $("#photoInput").onchange = async (e) => {
     const { full, thumb, w, h } = await compressPhoto(file);
     await store.setDoc("photoFull", day, { day, full });
     await store.setDoc("photos", day, { day, thumb, w, h, at: Date.now(), by: me });
-    toast("📸 Today's photo saved");
+    toast("Today's photo saved");
   } catch (err) { toast("Couldn't save photo: " + err.message, [], 8000); }
 };
 
@@ -865,9 +865,9 @@ function renderGuide() {
 
   body.innerHTML = `<h1>${name}’s guide</h1><p class="sub">${esc(ageText())}</p>
     ${card("🍽️ Food", meals)}
-    ${card("🚪 Toilet trips", toilet)}
+    ${card("Toilet trips", toilet)}
     ${card("🗣️ The toilet routine", routine)}
-    ${card("⚠️ Accidents", accidents)}
+    ${card("Accidents", accidents)}
     ${card("🌙 Bedtime and crate", night)}
     ${card("📞 Who to call", contacts || `<p class="muted">Add the vet and owners’ phone numbers in Settings → Sitter guide details.</p>`)}
     ${shared.quirks ? card("📝 Quirks &amp; notes", `<p class="notes">${esc(shared.quirks)}</p>`) : ""}`;
