@@ -209,6 +209,24 @@ function toast(msg, buttons = [], ms = 5000) {
   }
   document.body.append(el); toastTimer = setTimeout(() => el.remove(), ms);
 }
+// After a poo: one tap on a shape saves it; skipping costs nothing (it dismisses itself).
+function pooPrompt(id, ev, msg) {
+  document.querySelector(".toast")?.remove(); clearTimeout(toastTimer);
+  const el = document.createElement("div"); el.className = "toast pooq";
+  const mk = (label, fn) => { const b = document.createElement("button"); b.type = "button"; b.textContent = label; b.onclick = () => { el.remove(); fn(); }; return b; };
+  const top = document.createElement("div"); top.className = "tq-top";
+  const span = document.createElement("span"); span.textContent = msg;
+  top.append(span, mk("Undo", () => store.remove("events", id)));
+  const label = document.createElement("div"); label.className = "tq-label"; label.textContent = "How was it? (optional)";
+  const chips = document.createElement("div"); chips.className = "tq-chips";
+  for (const [k, v] of Object.entries(SHAPES)) chips.append(mk(v, async () => {
+    await store.update("events", id, { shape: k });
+    toast(`${LABEL[ev.type]} · ${v}`, [["Add more", () => editEntry({ id, ...ev, shape: k })]], 5000);
+  }));
+  chips.append(mk("More…", () => editEntry({ id, ...ev })));
+  el.append(top, label, chips); document.body.append(el);
+  toastTimer = setTimeout(() => el.remove(), 10000);
+}
 const portion = () => (shared.dailyGrams ? Math.round(shared.dailyGrams / Math.max(1, shared.mealsPerDay || 4)) : 0);
 
 async function log(type, at = Date.now()) {
@@ -220,10 +238,11 @@ async function log(type, at = Date.now()) {
   navigator.vibrate?.(30);
   const undo = ["Undo", () => store.remove("events", id)];
   const when = Date.now() - at > MIN ? ` at ${hm(at)}` : "";
-  if (type.startsWith("acc_")) toast(`Logged${when} – no telling off. Enzymatic cleaner, no bleach or ammonia`, type === "acc_poo" ? [undo, ["Add detail", () => editEntry({ id, ...ev })]] : [undo], 8000);
+  if (type === "acc_poo") pooPrompt(id, ev, `Logged${when} – no telling off. Enzymatic cleaner, no bleach or ammonia`);
+  else if (type.startsWith("acc_")) toast(`Logged${when} – no telling off. Enzymatic cleaner, no bleach or ammonia`, [undo], 8000);
   else if (type === "out") toast(`Logged${when} – supervise closely, try again in 10–15 min`, [undo], 8000);
   else if (type === "meal") toast(`Meal${ev.grams ? ` · ${ev.grams} g` : ""} logged${when}`, [undo, ["Edit", () => editEntry({ id, ...ev })]], 6000);
-  else if (isPoo(type)) toast(`${LABEL[type]} logged${when}`, [undo, ["Add detail", () => editEntry({ id, ...ev })]], 8000);
+  else if (isPoo(type)) pooPrompt(id, ev, `${LABEL[type]} logged${when}`);
   else toast(`${LABEL[type]} logged${when}`, [undo]);
 }
 

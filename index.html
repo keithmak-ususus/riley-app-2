@@ -20,6 +20,8 @@
   --p1: #2F6DB5; --p2: #A8457A;   /* the two household members */
   --radius: 12px; --shadow: none;
   --r-ctl: 10px; --r-ctl-lg: 12px; --r-sm: 8px; --r-sheet: 16px; --r-pill: 999px;  /* control, large control, small, modal, pill */
+  --hdr: color-mix(in srgb, var(--accent) 8%, var(--bg));   /* header band */
+  --nav-bg: #2A2420; --nav-fg: #CFC6BD; --nav-on: #FFFFFF; --nav-pill: rgba(255,255,255,.16);   /* bottom bar */
   --c-wee: #1A7F93; --c-poo: #8B5A2B; --c-acc: #B83A2E; --c-meal: #BF5F0A; --c-nap: #5252B8; --c-play: #2F7A4D; --c-exc: #A67C00; --c-walk: #7A4FA8;  /* action icon colours */
   --on-media: #FFFFFF;                                  /* text on photos, person colours and dark overlays */
   --scrim: rgba(0,0,0,.35); --scrim-caption: rgba(0,0,0,.55);  /* behind modals / under photo captions */
@@ -31,15 +33,19 @@
   :root:not(.light) { --bg:#1A1714; --card:#26211D; --ink:#F2EBE3; --muted:#A99D92; --line:#3A332D;
     --ok-bg:#1F3328; --warn-bg:#3A2D17; --alert-bg:#3D211D; --ok:#7CC49A; --warn:#E5B567; --alert:#F08A7E;
     --accent-text:#D9774F; --p1:#6FA3E0; --p2:#E08AB8;
+    --nav-bg:#2E2823; --nav-fg:#C7BDB3;
     --c-wee:#4FC3D6; --c-poo:#C99063; --c-acc:#F08A7E; --c-meal:#F0A04B; --c-nap:#9A9AF0; --c-play:#7CC49A; --c-exc:#E0B94A; --c-walk:#B79AE0; }
 }
 :root.night { --bg:#0F0D0B; --card:#1A1714; --ink:#D9CFC4; --muted:#8C8076; --line:#2C2621;
   --ok-bg:#16241C; --warn-bg:#2B2112; --alert-bg:#2E1814; --ok:#6BAF88; --warn:#D4A55A; --alert:#E07A6E; --accent:#A8512F;
   --accent-text:#C96A42; --p1:#5B8CC4; --p2:#C47AA2;
+  --nav-bg:#1A1714; --nav-fg:#A99D92;
   --c-wee:#43AEC0; --c-poo:#B58058; --c-acc:#E07A6E; --c-meal:#D98B3E; --c-nap:#8888DC; --c-play:#6BAF88; --c-exc:#C9A53F; --c-walk:#A488CC; }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; background: var(--bg); color: var(--ink); }
-body { padding: env(safe-area-inset-top) 16px calc(84px + env(safe-area-inset-bottom)); min-height: 100vh; }
+body { padding: 0 16px calc(84px + env(safe-area-inset-bottom)); min-height: 100vh; min-height: 100dvh; }
+html { overscroll-behavior-y: none; }   /* no pull-to-refresh or rubber-band while scrolling the log */
+body { overscroll-behavior-y: none; }
 button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 input, select, textarea { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line);
   border-radius: var(--r-ctl); padding: 12px; width: 100%; }
@@ -51,13 +57,18 @@ a { color: inherit; }
 .muted { color: var(--muted); }
 .demo { background: var(--warn-bg); color: var(--warn); font-size: 13px; padding: 8px 12px; border-radius: var(--r-sm); margin-top: 10px; }
 
-header { display: flex; align-items: center; gap: 12px; padding: 16px 4px 8px; }
+header { display: flex; align-items: center; gap: 14px; margin: 0 -16px; padding: calc(env(safe-area-inset-top) + 12px) 20px 12px;
+  background: var(--hdr); border-bottom: 1px solid var(--line); }
 header .title { flex: 1; min-width: 0; }
-header h1 { margin: 0; font-size: 26px; font-weight: 650; letter-spacing: -.02em; }
+header h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
 header .age { color: var(--muted); font-size: 14px; margin-top: 2px; }
-.avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: var(--line); }
+.avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: var(--line); border: 2px solid var(--card); flex: none; }
+.avatar.mark { display: none; place-items: center; background: color-mix(in srgb, var(--accent) 16%, var(--card)); color: var(--accent-text); border-color: var(--card); }
+.avatar.mark .ic { width: 30px; height: 30px; fill: currentColor; stroke: none; }
+.avatar.hidden + .mark { display: grid; }
 .clock { font-size: 40px; font-weight: 700; font-variant-numeric: tabular-nums; display: none; }
-.iconbtn { background: none; min-width: 44px; height: 44px; padding: 0 8px; border-radius: var(--r-ctl); color: var(--muted); font-size: 14px; font-weight: 600; flex: none; }
+.iconbtn { background: var(--card); border: 1px solid var(--line); width: 44px; height: 44px; padding: 0; border-radius: 50%; color: var(--ink); flex: none; display: grid; place-items: center; }
+.iconbtn .ic { width: 22px; height: 22px; }
 
 /* person badges */
 .badge { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: var(--on-media);
@@ -214,19 +225,24 @@ svg.chart { width: 100%; height: 120px; display: block; }
 .modal .people { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0 10px; }
 .modal .people button { border-radius: var(--radius); padding: 22px 10px; color: var(--on-media); font-size: 20px; font-weight: 700; }
 
-nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--card);
-  border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
-nav.tabs button { flex: 1; background: none; min-height: 60px; padding: 8px 0 6px; font-size: 12px; color: var(--muted); font-weight: 500; position: relative; }
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: flex; gap: 4px; background: var(--nav-bg); padding: 4px 8px calc(4px + env(safe-area-inset-bottom));
+  z-index: 5; transform: translateZ(0); }
+nav.tabs button { flex: 1; background: none; min-height: 54px; padding: 5px 0 3px; font-size: 12px; color: var(--nav-fg); font-weight: 500; position: relative; border-radius: 14px; }
 nav.tabs button .e { display: flex; justify-content: center; line-height: 0; margin-bottom: 3px; }
 nav.tabs button .ic { width: 24px; height: 24px; }
-nav.tabs button.on { color: var(--ink); font-weight: 650; }
-nav.tabs button.on::before { content: ""; position: absolute; top: -1px; left: 30%; right: 30%; height: 2px; background: var(--accent); }
-nav.tabs button.dot::after { content: ""; position: absolute; top: 8px; left: calc(50% + 10px); width: 7px; height: 7px;
-  border-radius: 50%; background: var(--accent); }
+nav.tabs button.on { color: var(--nav-on); font-weight: 650; background: var(--nav-pill); }
+nav.tabs button.dot::after { content: ""; position: absolute; top: 8px; left: calc(50% + 10px); width: 8px; height: 8px;
+  border-radius: 50%; background: var(--accent); border: 1.5px solid var(--nav-bg); }
 
 .toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(12px + env(safe-area-inset-top));
   background: var(--ink); color: var(--bg); padding: 12px 16px; border-radius: var(--r-ctl-lg); display: flex; gap: 14px;
   align-items: center; font-weight: 600; z-index: 30; box-shadow: var(--shadow-pop); width: max-content; max-width: calc(100vw - 32px); }
+.toast.pooq { flex-direction: column; align-items: stretch; gap: 8px; width: calc(100vw - 32px); max-width: 440px; }
+.toast .tq-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.toast .tq-label { font-size: 13px; font-weight: 500; opacity: .8; }
+.toast .tq-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.toast .tq-chips button { color: var(--bg); filter: none; border: 1.5px solid color-mix(in srgb, var(--bg) 45%, transparent); border-radius: var(--r-pill); padding: 0 16px; min-height: 44px; font-weight: 600; }
+.toast .tq-chips button:active { background: var(--bg); color: var(--ink); }
 .toast button { background: none; color: var(--accent); font-weight: 700; filter: brightness(1.4); flex: none; }
 
 #setup, #signin { max-width: 440px; margin: 10vh auto 0; }
@@ -240,10 +256,11 @@ body.console { padding: max(12px, env(safe-area-inset-top)) 28px 12px; }
 body.console nav.tabs, body.console .tab-only, body.console #settings, body.console #train, body.console #photos,
 body.console #coachTodayWrap, body.console #byPerson, body.console #foodCard, body.console .phone-only { display: none !important; }
 body.console .clock { display: block; }
-body.console #gear.tab-only { display: block !important; margin-left: 4px; }
-body.console header { padding: 0 4px 2px; }
+body.console #gear.tab-only { display: grid !important; margin-left: 4px; }
+body.console header { margin: 0; padding: 0 4px 2px; background: none; border: 0; gap: 12px; }
+body.console .avatar { border: 0; }
 body.console header h1 { font-size: 34px; }
-body.console .avatar { width: 56px; height: 56px; }
+body.console .avatar { width: 52px; height: 52px; }
 body.console .demo { margin-top: 2px; padding: 4px 12px; font-size: 12px; }
 body.console main { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; align-items: start; }
 body.console #today, body.console #health, body.console #log { display: block !important; }
@@ -296,7 +313,7 @@ body.console #consoleTip { display: block; margin-top: 10px; }
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3.5c3.2 4 5.5 6.9 5.5 10a5.5 5.5 0 0 1-11 0c0-3.1 2.3-6 5.5-10z"/></symbol><symbol id="i-mound" viewBox="0 0 24 24"><rect x="4.5" y="14.5" width="15" height="5" rx="2.5"/><rect x="7" y="9.5" width="10" height="5" rx="2.5"/><path d="M12.5 4.5c1.600 1 1.800 2.400.8 3.600"/></symbol><symbol id="i-exit" viewBox="0 0 24 24"><path d="M10 4.5H6.5a1.5 1.5 0 0 0-1.5 1.5v12a1.5 1.5 0 0 0 1.5 1.5H10M14.5 8l4 4-4 4M18.5 12H9.5"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.5 20 18.5H4z"/><path d="M12 10v4M12 16.5v.01"/></symbol><symbol id="i-bowl" viewBox="0 0 24 24"><path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M9 20h6"/><path d="M12 4v3"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M18 6l-1.4 1.4M7.4 16.6 6 18"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M5 9c4 1 10 1 14 0M5 15c4-1 10-1 14 0"/></symbol><symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 4c.6 4.4 2.6 6.4 7 7-4.4.6-6.4 2.6-7 7-.6-4.4-2.6-6.4-7-7 4.4-.6 6.4-2.6 7-7z"/></symbol><symbol id="i-walk" viewBox="0 0 24 24"><circle cx="6.5" cy="17.5" r="2"/><circle cx="17.5" cy="6.5" r="2"/><path d="M8.3 16.5c3-1 1-4.5 3.7-5.5s4 0 4.3-3"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/></symbol><symbol id="i-list" viewBox="0 0 24 24"><path d="M9 7h10M9 12h10M9 17h10"/><path d="M5 7v.01M5 12v.01M5 17v.01"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="m12 4 2.5 5.1 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 19.5S4.5 15 4.5 9.5A4 4 0 0 1 12 7.8 4 4 0 0 1 19.5 9.5C19.5 15 12 19.5 12 19.5z"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M4.5 8h3l1.5-2.5h6L16.5 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></symbol></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3.5c3.2 4 5.5 6.9 5.5 10a5.5 5.5 0 0 1-11 0c0-3.1 2.3-6 5.5-10z"/></symbol><symbol id="i-mound" viewBox="0 0 24 24"><rect x="4.5" y="14.5" width="15" height="5" rx="2.5"/><rect x="7" y="9.5" width="10" height="5" rx="2.5"/><path d="M12.5 4.5c1.600 1 1.800 2.400.8 3.600"/></symbol><symbol id="i-exit" viewBox="0 0 24 24"><path d="M10 4.5H6.5a1.5 1.5 0 0 0-1.5 1.5v12a1.5 1.5 0 0 0 1.5 1.5H10M14.5 8l4 4-4 4M18.5 12H9.5"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.5 20 18.5H4z"/><path d="M12 10v4M12 16.5v.01"/></symbol><symbol id="i-bowl" viewBox="0 0 24 24"><path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M9 20h6"/><path d="M12 4v3"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M18 6l-1.4 1.4M7.4 16.6 6 18"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M5 9c4 1 10 1 14 0M5 15c4-1 10-1 14 0"/></symbol><symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 4c.6 4.4 2.6 6.4 7 7-4.4.6-6.4 2.6-7 7-.6-4.4-2.6-6.4-7-7 4.4-.6 6.4-2.6 7-7z"/></symbol><symbol id="i-walk" viewBox="0 0 24 24"><circle cx="6.5" cy="17.5" r="2"/><circle cx="17.5" cy="6.5" r="2"/><path d="M8.3 16.5c3-1 1-4.5 3.7-5.5s4 0 4.3-3"/></symbol><symbol id="i-paw" viewBox="0 0 24 24"><circle cx="6.5" cy="11" r="1.7"/><circle cx="10" cy="6.8" r="1.7"/><circle cx="14" cy="6.8" r="1.7"/><circle cx="17.5" cy="11" r="1.7"/><path d="M12 12.2c-2.8 0-5 2.7-5 5 0 1.6 1.4 2 2.8 1.6.7-.2 1.5-.4 2.2-.4s1.5.2 2.2.4c1.4.4 2.8 0 2.8-1.600 0-2.300-2.200-5-5-5z"/></symbol><symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M19 7h1M4 12h3M13 12h7M4 17h11M21 17h-1"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="12" r="2.2"/><circle cx="18" cy="17" r="2.2"/></symbol><symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/></symbol><symbol id="i-list" viewBox="0 0 24 24"><path d="M9 7h10M9 12h10M9 17h10"/><path d="M5 7v.01M5 12v.01M5 17v.01"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="m12 4 2.5 5.1 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 19.5S4.5 15 4.5 9.5A4 4 0 0 1 12 7.8 4 4 0 0 1 19.5 9.5C19.5 15 12 19.5 12 19.5z"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M4.5 8h3l1.5-2.5h6L16.5 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></symbol></svg>
 
 <div id="setup" class="hidden">
   <h1>🐾 Riley</h1>
@@ -320,10 +337,11 @@ body.console #consoleTip { display: block; margin-top: 10px; }
 <div id="app" class="hidden">
   <header>
     <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" class="avatar hidden" id="hdrPhoto" alt="">
+    <span class="avatar mark" aria-hidden="true"><svg class="ic"><use href="#i-paw"/></svg></span>
     <div class="title"><h1 id="dogName">Riley</h1><div class="age" id="age"></div></div>
     <div class="clock" id="clock"></div>
-    <button class="iconbtn tab-only" id="viewToggle" title="Switch to console view" aria-label="Switch to console view">Console</button>
-    <button class="iconbtn tab-only" id="gear" title="Settings" aria-label="Settings">Settings</button>
+    <button class="iconbtn tab-only" id="viewToggle" title="Switch to console view" aria-label="Switch to console view"><svg class="ic"><use href="#i-monitor"/></svg></button>
+    <button class="iconbtn tab-only" id="gear" title="Settings" aria-label="Settings"><svg class="ic"><use href="#i-sliders"/></svg></button>
   </header>
   <div class="demo hidden" id="demoNote">Demo mode: add your Firebase config to sync between devices.</div>
 
