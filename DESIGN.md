@@ -240,9 +240,13 @@ One set of hand-drawn inline SVG line icons (`<symbol id="i-…">` sprite at the
 - **Style:** outlined pill (1px `--line`) for counts; tags are small tinted status pills (over, soon, ok).
 
 ### Tab bar
-- **Style:** fixed bottom bar with five buttons, each a 24px line icon over a 12px label; the active tab is ink and bold with a 2px terracotta bar above it; a small dot marks something waiting.
+- **Style:** a fixed dark bottom bar (`--nav-bg`, `--nav-fg`, `--nav-on`) with five buttons, each a 24px line icon over a 12px label. The active tab is white and bold on a soft lighter pill (`--nav-pill`); a small terracotta dot marks something waiting. The bar is the one dark surface in light mode, so the way around the app is always obvious.
+
+### Header
+- **Style (phone):** a full-width band tinted 8% terracotta (`--hdr`) with a hairline below: a 52px avatar (the latest photo, or a terracotta paw mark until there is one), the dog's name at 28px bold, the age line, and two 44px round icon buttons (console, settings). The console header stays compact and flat so the screen fits without scrolling.
 
 ### Toast
+- **After a poo:** a larger toast asks "How was it? (optional)" with Firm / Soft / Loose / Watery chips (one tap saves the shape) and "More…" for colour and a note. It dismisses itself after 10s.
 - **Style:** inverted pill (ink background, cream text), 14px corners, with an Undo or Edit action; floats above the tab bar.
 
 ### Modal / sheet
