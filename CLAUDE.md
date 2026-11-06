@@ -36,7 +36,7 @@ There are exactly two household `members`. Every record stores `by`. Phones log 
 
 ## Two views – always check both
 - **Phone** (< 700px or set in Settings): tab bar with Log, Today, Train, Health and Photos. Settings opens from the ⚙️ button.
-- **Console** (`body.console`, iPad landscape 1180×820): one screen with Log, Today, Coming up and the top coach tip. It has **no page scroll**, so check that `document.documentElement.scrollHeight <= innerHeight`. It dims from 22:00 to 06:00.
+- **Console** (`body.console`, iPad landscape 1180×820): one screen with Log, Today, Coming up and the top coach tip. It has **no page scroll**, so check that `document.documentElement.scrollHeight <= innerHeight`. It dims from 22:00 to 06:00. **Display mode** (`body.console.display`, toggled by the Display/Log pill in the console header, remembered in `riley:display`) hides the log buttons and shows a photo carousel under the status tiles; it must also have no page scroll. On the console, Settings and the sitter guide open as overlays (`Done` closes), never by switching to phone view.
 - Touch targets must be at least 44px. Logging must stay one tap on phones.
 
 ## Conventions

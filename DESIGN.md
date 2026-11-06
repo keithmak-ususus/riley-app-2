@@ -198,6 +198,8 @@ Single column on phones (under 700px) with a fixed five-tab bar (Log, Today, Tra
 
 The **console** (iPad landscape, 1180×820) is one screen with **no page scroll**: a two-column grid (1.25fr / 1fr, 28px gap) holding Log, Today, Coming up and the top coach tip. Figures grow (tile figure 42px) and the indoor log buttons become one row of six. Long lists scroll inside their own box (timeline about 27vh, upcoming about 20vh) so the page itself never does. From 22:00 to 06:00 it switches to the night palette.
 
+**Display mode (console):** a view-only variant for the wall iPad. The log buttons are replaced by a photo carousel (newest first, then back through the weeks, 12s per photo with a 1s cross-fade, caption "Wk n · date") that fills the height left under the status tiles (measured in JS, so the page never scrolls); tile figures grow to 46px; the Display pill turns terracotta and reads "Log" to get back. At night the photos are dimmed. On the console, Settings and the sitter guide open as full-screen overlays with a Done button, so the view never switches.
+
 **Today (phone)** reads in the order people need it: counts, the timeline, then suggestions (one shown, the rest behind a "+n more" row), then food.
 
 Spacing rhythm is tight and consistent: 6px between pips, 10px between tiles and buttons, 14–16px card padding, 16px page gutter (28px on the console).
