@@ -11,6 +11,7 @@ A household puppy log for Riley. The iPad runs it as a wall console, and two pho
 - `index.html`: markup and CSS only. There's no build step and no framework, so keep it that way.
 - `app.js`: all UI logic, in sections (setup, view/tabs, people, logging, trip planner, coach rendering, health, training, photos, settings). The boot call stays at the very bottom.
 - `coach.js`: **pure** suggestion engine `coach(ctx) → [{id, area, level, title, body, source, action}]`, with no DOM or storage. `area` is `food | toilet | health | training | prep`, and `level` is `do | soon | info`. `action` is either `{patch}` (merged into settings) or `{tab}`. A stable `id` lets dismissals stick.
+- `planner.js`: **pure** toilet-trip rules from `GUIDELINES.md` (`nextTrip`, time-zone and quiet-hours helpers). The app and the reminder sender both use it, so a rule change goes here once, with a test in `tests/unit/`. `reminders.js` (pure) decides which phone reminders are due and which devices get them; `prefs.js` holds the per-device choices and defaults; `sw.js` is the service worker that shows pushes (it caches nothing); `scripts/reminders/send.mjs` is the GitHub Actions sender.
 - `photos.js`: compresses camera photos into JPEG data URLs (full ≤ 700 KB, thumb ~20 KB). **Photos live in Firestore, not Cloud Storage**, because the Spark plan has no Storage.
 - `store.js`: data layer with `subscribe / add / update / remove / setDoc (merge) / get`. Firestore when `config.js` has keys, otherwise a localStorage **demo mode**. Demo mode must keep working.
 - `config.js`: Firebase config plus shared defaults.
@@ -28,6 +29,7 @@ A household puppy log for Riley. The iPad runs it as a wall console, and two pho
 | `members` | doc id = auth uid. Owner: `{role: "owner", name, email, createdAt}`, written only by the owner claiming their own record. Sitter: `{role: "sitter", name, startsAt, expiresAt, inviteId, pin}`, written only by the sitter, and only if the PIN matches the invite and the dates mirror it |
 | `invites` | doc id = random 22-char invite id: `{name, startsAt, expiresAt, createdAt}` (Timestamps). Owners create/list/delete; any signed-in user can `get` one by id |
 | `invitePins` | doc id = the invite id: `{pin: "123456"}`. Owner-only, so knowing the link isn't enough |
+| `devices` | doc id = hash of the FCM token: `{token, name, uid, prefs: {trip, treatment, photo, quiet: {on, from, to}}, updatedAt}`. One per phone that turned on reminders; owners only. The sender deletes a device when FCM says its token is dead |
 | `meta/owners` | `{emails: [..]}` – verified Google emails allowed to be owners (max 2, lower-case). The first Google account to arrive creates it |
 | `settings/main` | `members[2]`, `dogName`, `birthDate`, `arrivalDate`, `adultSize`, `mealsPerDay`, `dailyGrams`, `gramsSetWeight`, `weeIntervalMin`, `bedtime`, `intervals{worming,flea}`, `train{nameLevel}`, `dismissed{id: untilMs}`, sitter-guide info: `foodBrand`, `mealTimes`, `vetName/vetPhone/vetAddress`, `emergencyVetName/emergencyVetPhone`, `ownerPhones[2]` (same order as `members`), `crateNotes`, `quirks` |
 

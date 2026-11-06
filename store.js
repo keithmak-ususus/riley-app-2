@@ -1,6 +1,6 @@
 // Tiny data layer: Firebase Firestore when configured, otherwise a local demo store.
 // Collections live under households/<code>/<collection>.
-import { firebaseConfig } from "./config.js?v=f6cecbb5";
+import { firebaseConfig } from "./config.js?v=7b28de81";
 
 export const DEMO = !firebaseConfig.apiKey || firebaseConfig.apiKey === "PASTE_ME";
 
@@ -25,7 +25,28 @@ async function firebaseStore(household) {
   // Firestore Timestamps become plain milliseconds, so the app never sees Firebase types.
   const plain = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v && typeof v.toMillis === "function" ? v.toMillis() : v]));
 
+  const messaging = async () => { const M = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-messaging.js`); return { M, m: M.getMessaging(app) }; };
+  const push = {
+    supported: async () => {
+      if (!("serviceWorker" in navigator && "PushManager" in window && "Notification" in window)) return false;
+      try { return await (await messaging()).M.isSupported(); } catch { return false; }
+    },
+    permission: () => Notification.permission,
+    // Ask for permission (must follow a tap), register the service worker, and return this phone's FCM token.
+    async enable(vapidKey) {
+      if ((await Notification.requestPermission()) !== "granted") throw Object.assign(new Error("Notifications are blocked"), { code: "denied" });
+      return this.token(vapidKey);
+    },
+    async token(vapidKey) {
+      const reg = await navigator.serviceWorker.register("sw.js"); await navigator.serviceWorker.ready;
+      const { M, m } = await messaging(); return M.getToken(m, { vapidKey, serviceWorkerRegistration: reg });
+    },
+    async disable() { try { const { M, m } = await messaging(); await M.deleteToken(m); } catch (e) { console.error(e); } },
+    async test(title, body) { const reg = await navigator.serviceWorker.ready; return reg.showNotification(title, { body, tag: "test", icon: "icon-192.png" }); },
+  };
+
   return {
+    push,
     // Owners sign in with Google. A leftover anonymous session from the old setup doesn't count.
     needsSignIn: () => !(auth.currentUser && !auth.currentUser.isAnonymous),
     user: () => auth.currentUser,
@@ -72,7 +93,16 @@ function demoStore(household) {
   // Firestore rules make) so the whole sitter flow can be tried and tested without Firebase.
   const uidKey = `riley-demo:${household}:uid`;
   const denied = () => Object.assign(new Error("Missing or insufficient permissions."), { code: "permission-denied" });
+  const push = {   // no real notifications in demo mode: this only lets the Settings screen work
+    supported: async () => "Notification" in window,
+    permission: () => Notification.permission,
+    enable: async () => { if ((await Notification.requestPermission()) !== "granted") throw Object.assign(new Error("Notifications are blocked"), { code: "denied" }); return "demo-token-" + household; },
+    token: async () => "demo-token-" + household,
+    disable: async () => {},
+    test: async (title, body) => { new Notification(title, { body }); },
+  };
   return {
+    push,
     needsSignIn: () => false, signIn: async () => {}, signOut: async () => { localStorage.removeItem(uidKey); },
     user: () => { const uid = localStorage.getItem(uidKey); return uid ? { uid, isAnonymous: true } : null; },
     signInSitter: async () => { if (!localStorage.getItem(uidKey)) localStorage.setItem(uidKey, "sitter-" + Math.random().toString(36).slice(2, 10)); },
