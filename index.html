@@ -7,132 +7,151 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Riley">
-<meta name="theme-color" content="#FBF7F1">
+<meta name="theme-color" content="#FFFFFF">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-512.png">
 <link rel="icon" href="icon-512.png">
 <title>Riley</title>
 <style>
 :root {
-  --bg: #FBF7F1; --card: #FFFFFF; --ink: #2A2420; --muted: #7A6F66; --line: #E9E1D7;
-  --accent: #C2603C; --accent-ink: #FFFFFF; --ok: #3C7D5A; --ok-bg: #E7F2EB;
-  --warn: #9A6412; --warn-bg: #FBEFD9; --alert: #B83A2E; --alert-bg: #FBE4E1;
+  --bg: #FFFFFF; --card: #FFFFFF; --ink: #2A2420; --muted: #7A6F66; --line: #E8E4DF;
+  --accent: #B5532F; --accent-text: #B5532F; --accent-ink: #FFFFFF; --ok: #36714F; --ok-bg: #E7F2EB;  /* accent = fills, accent-text = text on the page */
+  --warn: #8F5C10; --warn-bg: #FBEFD9; --alert: #B83A2E; --alert-bg: #FBE4E1;
   --p1: #2F6DB5; --p2: #A8457A;   /* the two household members */
-  --radius: 18px; --shadow: 0 1px 2px rgba(42,36,32,.06), 0 4px 14px rgba(42,36,32,.05);
+  --radius: 12px; --shadow: none;
+  --r-ctl: 10px; --r-ctl-lg: 12px; --r-sm: 8px; --r-sheet: 16px; --r-pill: 999px;  /* control, large control, small, modal, pill */
+  --c-wee: #1A7F93; --c-poo: #8B5A2B; --c-acc: #B83A2E; --c-meal: #BF5F0A; --c-nap: #5252B8; --c-play: #2F7A4D; --c-exc: #A67C00; --c-walk: #7A4FA8;  /* action icon colours */
+  --on-media: #FFFFFF;                                  /* text on photos, person colours and dark overlays */
+  --scrim: rgba(0,0,0,.35); --scrim-caption: rgba(0,0,0,.55);  /* behind modals / under photo captions */
+  --viewer-bg: rgba(10,8,6,.96); --viewer-btn: rgba(255,255,255,.14);
+  --shadow-pop: 0 6px 24px rgba(0,0,0,.2); --shadow-modal: 0 10px 40px rgba(0,0,0,.25);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Segoe UI", Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not(.light) { --bg:#1A1714; --card:#26211D; --ink:#F2EBE3; --muted:#A99D92; --line:#3A332D;
     --ok-bg:#1F3328; --warn-bg:#3A2D17; --alert-bg:#3D211D; --ok:#7CC49A; --warn:#E5B567; --alert:#F08A7E;
-    --p1:#6FA3E0; --p2:#E08AB8; }
+    --accent-text:#D9774F; --p1:#6FA3E0; --p2:#E08AB8;
+    --c-wee:#4FC3D6; --c-poo:#C99063; --c-acc:#F08A7E; --c-meal:#F0A04B; --c-nap:#9A9AF0; --c-play:#7CC49A; --c-exc:#E0B94A; --c-walk:#B79AE0; }
 }
 :root.night { --bg:#0F0D0B; --card:#1A1714; --ink:#D9CFC4; --muted:#8C8076; --line:#2C2621;
   --ok-bg:#16241C; --warn-bg:#2B2112; --alert-bg:#2E1814; --ok:#6BAF88; --warn:#D4A55A; --alert:#E07A6E; --accent:#A8512F;
-  --p1:#5B8CC4; --p2:#C47AA2; }
+  --accent-text:#C96A42; --p1:#5B8CC4; --p2:#C47AA2;
+  --c-wee:#43AEC0; --c-poo:#B58058; --c-acc:#E07A6E; --c-meal:#D98B3E; --c-nap:#8888DC; --c-play:#6BAF88; --c-exc:#C9A53F; --c-walk:#A488CC; }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; background: var(--bg); color: var(--ink); }
 body { padding: env(safe-area-inset-top) 16px calc(84px + env(safe-area-inset-bottom)); min-height: 100vh; }
 button { font: inherit; color: inherit; border: 0; cursor: pointer; }
-input, select { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line);
-  border-radius: 12px; padding: 12px; width: 100%; }
-h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 24px 4px 10px; }
+input, select, textarea { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r-ctl); padding: 12px; width: 100%; }
+h2 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 32px 4px 8px; }
 h3 { font-size: 17px; margin: 0 0 4px; }
 a { color: inherit; }
+:focus-visible { outline: 3px solid var(--accent-text); outline-offset: 2px; }
 .hidden { display: none !important; }
 .muted { color: var(--muted); }
-.demo { background: var(--warn-bg); color: var(--warn); font-size: 13px; padding: 8px 12px; border-radius: 10px; margin-top: 10px; }
+.demo { background: var(--warn-bg); color: var(--warn); font-size: 13px; padding: 8px 12px; border-radius: var(--r-sm); margin-top: 10px; }
 
 header { display: flex; align-items: center; gap: 12px; padding: 16px 4px 8px; }
 header .title { flex: 1; min-width: 0; }
-header h1 { margin: 0; font-size: 30px; letter-spacing: -.02em; }
+header h1 { margin: 0; font-size: 26px; font-weight: 650; letter-spacing: -.02em; }
 header .age { color: var(--muted); font-size: 14px; margin-top: 2px; }
-.avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; box-shadow: var(--shadow); background: var(--line); }
+.avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: var(--line); }
 .clock { font-size: 40px; font-weight: 700; font-variant-numeric: tabular-nums; display: none; }
-.iconbtn { background: var(--card); width: 44px; height: 44px; border-radius: 50%; box-shadow: var(--shadow); font-size: 20px; flex: none; }
+.iconbtn { background: none; min-width: 44px; height: 44px; padding: 0 8px; border-radius: var(--r-ctl); color: var(--muted); font-size: 14px; font-weight: 600; flex: none; }
 
 /* person badges */
-.badge { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: #fff;
+.badge { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: var(--on-media);
   font-size: 12px; font-weight: 700; background: var(--muted); flex: none; }
 .badge.p1 { background: var(--p1); } .badge.p2 { background: var(--p2); }
 .byline { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
 
 .nudge { background: var(--alert-bg); color: var(--alert); border-radius: var(--radius); padding: 14px 16px;
-  font-weight: 650; font-size: 17px; margin: 8px 0 4px; }
-.nudge.calm { background: var(--ok-bg); color: var(--ok); }
+  font-weight: 600; font-size: 17px; margin: 8px 0 4px; }
+.nudge.calm { background: none; color: var(--ink); padding: 8px 4px; font-size: 19px; }
 .nudge.warn { background: var(--warn-bg); color: var(--warn); }
-.routine { background: var(--card); box-shadow: var(--shadow); border-radius: var(--radius); margin: 8px 0 0;
-  padding: 10px 14px; font-size: 14px; line-height: 1.45; }
+.routine { color: var(--muted); margin: 0; padding: 0 4px; font-size: 14px; line-height: 1.5; }
 .routine p { margin: 0; }
 .routine .r-full { display: none; }
 .photo-nudge { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 8px; padding: 10px 14px;
-  background: var(--card); border-radius: 14px; box-shadow: var(--shadow); font-weight: 600; text-align: left; }
-.photo-nudge span:last-child { margin-left: auto; color: var(--accent); }
+  background: none; border: 1px solid var(--line); border-radius: var(--r-ctl-lg); font-weight: 500; text-align: left; }
+.photo-nudge span:last-child { margin-left: auto; color: var(--accent-text); }
 
-.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-.tile { background: var(--card); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); min-width: 0; }
-.tile .label { font-size: 13px; color: var(--muted); font-weight: 600; }
-.tile .big { font-size: 30px; font-weight: 750; letter-spacing: -.02em; margin-top: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; margin-top: 16px; }
+.tile { border-top: 1px solid var(--line); border-radius: 0; padding: 14px 4px 16px; min-width: 0; }
+.tile .label { font-size: 13px; color: var(--muted); font-weight: 500; }
+.tile .big { font-size: 32px; font-weight: 600; letter-spacing: -.02em; margin-top: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .tile .sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
-.tile.warn { background: var(--warn-bg); } .tile.warn .big { color: var(--warn); }
-.tile.alert { background: var(--alert-bg); } .tile.alert .big { color: var(--alert); }
+.tile.warn .big { color: var(--warn); }
+.tile.alert .big { color: var(--alert); }
 .meals { display: flex; gap: 6px; margin-top: 8px; }
-.meals span { flex: 1; height: 10px; border-radius: 5px; background: var(--line); }
+.meals span { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
 .meals span.on { background: var(--ok); }
 
-.group-label { font-size: 13px; color: var(--muted); font-weight: 600; margin: 18px 4px 0; }
+.group-label { font-size: 13px; color: var(--muted); font-weight: 500; margin: 24px 4px 0; }
 .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-.act { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 6px 12px;
-  display: flex; flex-direction: column; align-items: center; gap: 6px; font-weight: 650; font-size: 15px; min-height: 92px;
+.act { background: none; border: 1.5px solid var(--line); border-radius: var(--radius); padding: 12px 6px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-weight: 600; font-size: 16px; min-height: 80px;
   transition: transform .08s; }
 .act:active { transform: scale(.96); }
-.act .e { font-size: 30px; line-height: 1; }
-.act.primary { background: var(--accent); color: var(--accent-ink); }
-.act.primary.soft { background: color-mix(in srgb, var(--accent) 18%, var(--card)); color: var(--ink); }
-.actions.other .act { min-height: 80px; font-size: 14px; }
-.actions.other .act .e { font-size: 26px; }
+.ic { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.act .e { display: flex; line-height: 0; }
+.act .ic { color: var(--ic, var(--ink)); stroke-width: 2; }
+.act[data-type="wee"] { --ic: var(--c-wee); } .act[data-type="poo"] { --ic: var(--c-poo); } .act[data-type="accident"] { --ic: var(--c-acc); }
+.act[data-type="meal"] { --ic: var(--c-meal); } .act[data-type="nap"] { --ic: var(--c-nap); } .act[data-type="play"] { --ic: var(--c-play); }
+.act[data-type="excited"] { --ic: var(--c-exc); } .act[data-type="walk"] { --ic: var(--c-walk); }
+.act.primary { background: color-mix(in srgb, var(--ic, var(--ink)) 12%, var(--bg)); border-color: color-mix(in srgb, var(--ic, var(--ink)) 45%, var(--bg)); }
+.act.primary .ic { width: 34px; height: 34px; }
+.act.primary.soft { background: none; border-color: var(--line); }
+.act.primary.soft .ic { width: 28px; height: 28px; }
+.actions.other .act { min-height: 64px; padding: 8px 6px; gap: 2px; font-size: 15px; font-weight: 500; }
+.actions.other .act .ic { width: 22px; height: 22px; }
 .sheet { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
-.sheet button { background: var(--alert-bg); color: var(--alert); border-radius: 14px; padding: 14px; font-weight: 650; }
+.sheet button { background: var(--alert-bg); color: var(--alert); border-radius: var(--r-ctl-lg); padding: 14px; font-weight: 650; }
 .sheet button.cancel { background: var(--card); color: var(--muted); }
 
 .counts { display: flex; gap: 8px; flex-wrap: wrap; }
-.chip { background: var(--card); border-radius: 999px; padding: 8px 14px; font-size: 14px; box-shadow: var(--shadow);
+.chip { border: 1px solid var(--line); border-radius: var(--r-pill); padding: 8px 14px; font-size: 14px;
   display: inline-flex; align-items: center; gap: 6px; }
 .chip b { font-variant-numeric: tabular-nums; }
-.list { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-.row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--line); }
-.row:first-child { border-top: 0; }
+.list { overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 1px solid var(--line); }
 .row .what { min-height: 44px; display: flex; flex-direction: column; justify-content: center; }
 .row .t { font-variant-numeric: tabular-nums; color: var(--muted); width: 48px; font-size: 14px; flex: none; }
-.row .what { flex: 1; font-weight: 600; min-width: 0; }
+.row .what { flex: 1; font-weight: 500; min-width: 0; }
 .row .what small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; margin-top: 1px; }
 .row .who { color: var(--muted); font-size: 13px; }
-.row .x { background: none; color: var(--muted); font-size: 18px; padding: 4px 8px; }
+.row .x { background: none; color: var(--muted); font-size: 18px; padding: 4px 8px; min-width: 44px; min-height: 44px; }
 .row button.what { text-align: left; background: none; padding: 0; }
-.empty { padding: 18px; color: var(--muted); text-align: center; }
-.tag { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+.empty { padding: 14px 4px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); }
+.tag { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: var(--r-pill); white-space: nowrap; }
 .tag.over { background: var(--alert-bg); color: var(--alert); } .tag.soon { background: var(--warn-bg); color: var(--warn); }
 .tag.ok { background: var(--ok-bg); color: var(--ok); }
-.done-btn { background: var(--ok-bg); color: var(--ok); border-radius: 10px; padding: 8px 12px; font-weight: 650; font-size: 14px; flex: none; }
+.done-btn { background: var(--ok-bg); color: var(--ok); border-radius: var(--r-sm); padding: 8px 12px; font-weight: 650; font-size: 14px; flex: none; min-height: 44px; }
 .form { display: grid; gap: 8px; margin-top: 10px; }
 .form .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .form .three { display: grid; grid-template-columns: 1.1fr 1.3fr auto; gap: 8px; }
-.btn { background: var(--accent); color: var(--accent-ink); border-radius: 12px; padding: 13px; font-weight: 650; }
-.btn.ghost { background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
-.btn.small { padding: 9px 12px; font-size: 14px; }
+.btn { background: var(--accent); color: var(--accent-ink); border-radius: var(--r-ctl); padding: 13px; font-weight: 600; }
+.btn.ghost { background: none; color: var(--ink); border: 1.5px solid var(--line); }
+.btn.small { padding: 9px 12px; font-size: 14px; min-height: 44px; }
 .field { display: grid; gap: 6px; margin-bottom: 12px; } .field label { font-size: 13px; color: var(--muted); font-weight: 600; }
 .code { font-family: ui-monospace, Menlo, monospace; font-size: 14px; word-break: break-all; }
-.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 10px; }
+.card { border-top: 1px solid var(--line); padding: 14px 4px; margin-bottom: 4px; }
 svg.chart { width: 100%; height: 120px; display: block; }
 
 /* coach suggestions */
 .coach { display: grid; gap: 10px; }
-.tip { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; border-left: 5px solid var(--line); }
-.tip.do { border-left-color: var(--accent); } .tip.soon { border-left-color: var(--warn); } .tip.info { border-left-color: var(--ok); }
-.tip h3 { font-size: 16px; }
+.tip { border-top: 1px solid var(--line); padding: 14px 4px; }
+.tip .tiptitle { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.tip .tiptitle .tag { flex: none; margin-top: 2px; }
+.tag.do { background: var(--accent); color: var(--accent-ink); }
+.coach .more { width: 100%; min-height: 48px; }
+.tip h3 { font-size: 16px; font-weight: 600; }
 .tip p { margin: 4px 0 8px; font-size: 14px; line-height: 1.45; }
 .tip .foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .tip .src { font-size: 12px; color: var(--muted); margin-right: auto; }
-.tip .later { background: none; color: var(--muted); font-size: 14px; padding: 8px; }
+.tip .src a { display: inline-flex; align-items: center; min-height: 44px; }
+.tip .later { background: none; color: var(--muted); font-size: 14px; padding: 8px 12px; min-height: 44px; min-width: 44px; }
 
 /* food */
 .bar { height: 12px; border-radius: 6px; background: var(--line); overflow: hidden; margin: 8px 0 6px; }
@@ -141,68 +160,70 @@ svg.chart { width: 100%; height: 120px; display: block; }
 
 /* training */
 .scores { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 10px; }
-.scores button { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px 0; font-weight: 700; font-size: 17px; }
+.scores button { background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 12px 0; font-weight: 700; font-size: 17px; }
 .scores button:active { background: var(--accent); color: var(--accent-ink); }
 .levels { display: flex; gap: 4px; margin-top: 8px; }
 .levels span { flex: 1; text-align: center; font-size: 11px; padding: 6px 2px; border-radius: 8px; background: var(--bg); color: var(--muted); }
 .levels span.on { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
 .levels span.done { background: var(--ok-bg); color: var(--ok); }
 .social { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-.social button { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px; text-align: left;
+.social button { background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 10px; min-height: 44px; text-align: left;
   font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; gap: 6px; align-items: center; }
-.social button b { background: var(--card); border-radius: 999px; padding: 1px 8px; font-size: 12px; }
+.social button b { background: var(--card); border-radius: var(--r-pill); padding: 1px 8px; font-size: 12px; }
 .social button.seen { border-color: var(--ok); }
 .hist { margin-top: 10px; font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
-.check { display: flex; align-items: center; gap: 8px; font-size: 15px; }
-.check input { width: 22px; height: 22px; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 15px; min-height: 44px; }
+.check input { width: 24px; height: 24px; }
 
 /* photos */
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
-.grid button { padding: 0; background: var(--line); border-radius: 12px; overflow: hidden; aspect-ratio: 1; position: relative; }
+.grid button { padding: 0; background: var(--line); border-radius: var(--r-ctl); overflow: hidden; aspect-ratio: 1; position: relative; }
 .grid img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.grid span { position: absolute; left: 6px; bottom: 6px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px;
+.grid span { position: absolute; left: 6px; bottom: 6px; background: var(--scrim-caption); color: var(--on-media); font-size: 11px;
   font-weight: 600; padding: 2px 6px; border-radius: 6px; }
-.viewer { position: fixed; inset: 0; background: rgba(10,8,6,.96); z-index: 20; display: flex; flex-direction: column;
-  padding: calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 12px); color: #fff; }
+.viewer { position: fixed; inset: 0; background: var(--viewer-bg); z-index: 20; display: flex; flex-direction: column;
+  padding: calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 12px); color: var(--on-media); }
 .viewer .imgs { flex: 1; display: flex; gap: 8px; align-items: center; justify-content: center; min-height: 0; }
 .viewer .imgs.compare { flex-direction: column; }
 @media (orientation: landscape) { .viewer .imgs.compare { flex-direction: row; } }
 .viewer figure { margin: 0; flex: 1; min-height: 0; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.viewer img { max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; border-radius: 10px; }
+.viewer img { max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; border-radius: var(--r-sm); }
 .viewer figcaption { font-size: 13px; opacity: .8; margin-top: 6px; }
 .viewer .vbar { display: flex; gap: 8px; justify-content: space-between; align-items: center; padding-top: 10px; }
-.viewer .vbar button { background: rgba(255,255,255,.14); color: #fff; border-radius: 12px; padding: 12px 14px; font-weight: 600; }
+.viewer .vbar button { background: var(--viewer-btn); color: var(--on-media); border-radius: var(--r-ctl); padding: 12px 14px; font-weight: 600; }
 .viewer .vtop { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; font-weight: 650; }
 
 /* who picker */
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 15; display: grid; place-items: center; padding: 20px; }
-.modal .box { background: var(--card); border-radius: 22px; padding: 22px; width: min(460px, 100%); box-shadow: 0 10px 40px rgba(0,0,0,.25); }
+.modal { position: fixed; inset: 0; background: var(--scrim); z-index: 15; display: grid; place-items: center; padding: 20px; }
+.modal .box { background: var(--card); border-radius: var(--r-sheet); padding: 22px; width: min(460px, 100%); border: 1px solid var(--line); }
 .whenGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 10px; }
-.whenGrid button { background: var(--accent); color: var(--accent-ink); border-radius: 14px; min-height: 56px; font-weight: 650; }
-.whenGrid button[data-min="0"], .whenGrid button[data-min="pick"] { background: var(--bg); color: var(--ink); border: 2px solid var(--line); }
-.modal .btn.ghost { background: var(--bg); border: 2px solid var(--line); box-shadow: none; }
+.whenGrid button { background: none; color: var(--ink); border: 1.5px solid var(--line); border-radius: var(--r-ctl-lg); min-height: 56px; font-weight: 600; }
+.whenGrid button[data-min="0"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.modal .btn.ghost { background: none; border: 1.5px solid var(--line); }
 .timeRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 10px; }
 .timeRow .btn, #whenCancel { min-height: 48px; }
 .efield { display: block; font-size: 13px; color: var(--muted); font-weight: 600; margin: 12px 0; }
 .efield input { margin-top: 4px; min-height: 48px; }
 .editErr { color: var(--alert); font-size: 14px; margin: 0 0 10px; }
-.earlier { margin-left: auto; font-weight: 600; color: var(--accent); }
+.earlier { margin-left: auto; font-weight: 600; color: var(--accent-text); }
 .group-label.has-hint { display: flex; align-items: center; }
 .act { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
 .modal .people { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0 10px; }
-.modal .people button { border-radius: 18px; padding: 22px 10px; color: #fff; font-size: 20px; font-weight: 700; }
+.modal .people button { border-radius: var(--radius); padding: 22px 10px; color: var(--on-media); font-size: 20px; font-weight: 700; }
 
 nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--card);
   border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
-nav.tabs button { flex: 1; background: none; padding: 10px 0 12px; font-size: 12px; color: var(--muted); font-weight: 600; position: relative; }
-nav.tabs button .e { display: block; font-size: 22px; margin-bottom: 2px; }
-nav.tabs button.on { color: var(--accent); }
-nav.tabs button.dot::after { content: ""; position: absolute; top: 8px; left: calc(50% + 10px); width: 9px; height: 9px;
+nav.tabs button { flex: 1; background: none; min-height: 60px; padding: 8px 0 6px; font-size: 12px; color: var(--muted); font-weight: 500; position: relative; }
+nav.tabs button .e { display: flex; justify-content: center; line-height: 0; margin-bottom: 3px; }
+nav.tabs button .ic { width: 24px; height: 24px; }
+nav.tabs button.on { color: var(--ink); font-weight: 650; }
+nav.tabs button.on::before { content: ""; position: absolute; top: -1px; left: 30%; right: 30%; height: 2px; background: var(--accent); }
+nav.tabs button.dot::after { content: ""; position: absolute; top: 8px; left: calc(50% + 10px); width: 7px; height: 7px;
   border-radius: 50%; background: var(--accent); }
 
-.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom));
-  background: var(--ink); color: var(--bg); padding: 12px 16px; border-radius: 14px; display: flex; gap: 14px;
-  align-items: center; font-weight: 600; z-index: 30; box-shadow: 0 6px 24px rgba(0,0,0,.2); width: max-content; max-width: calc(100vw - 32px); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(12px + env(safe-area-inset-top));
+  background: var(--ink); color: var(--bg); padding: 12px 16px; border-radius: var(--r-ctl-lg); display: flex; gap: 14px;
+  align-items: center; font-weight: 600; z-index: 30; box-shadow: var(--shadow-pop); width: max-content; max-width: calc(100vw - 32px); }
 .toast button { background: none; color: var(--accent); font-weight: 700; filter: brightness(1.4); flex: none; }
 
 #setup, #signin { max-width: 440px; margin: 10vh auto 0; }
@@ -232,7 +253,8 @@ body.console .tile .label, body.console .tile .sub { font-size: 15px; }
 body.console .actions { margin-top: 6px; }
 body.console .actions.other { grid-template-columns: repeat(6, 1fr); }
 body.console .act { min-height: 72px; padding: 8px 6px; gap: 4px; }
-body.console .act .e { font-size: 26px; }
+body.console .act .ic { width: 22px; height: 22px; }
+body.console .act.primary .ic { width: 28px; height: 28px; }
 body.console .group-label { margin-top: 8px; }
 body.console #today h2, body.console #health h2 { margin: 12px 4px 8px; }
 body.console #today .first-h2 { margin-top: 0; }
@@ -245,9 +267,32 @@ body.console #consoleTip .tip { padding: 10px 14px; }
 body.console #consoleTip .tip p { margin: 2px 0 0; }
 #consoleTip { display: none; }
 body.console #consoleTip { display: block; margin-top: 10px; }
+/* ---------- Sitter guide ---------- */
+#guide .guide-actions { display: flex; gap: 10px; margin: 6px 0 4px; }
+#guide .guide-actions .btn { min-height: 44px; padding: 10px 16px; }
+#guide h1 { font-size: 28px; margin: 14px 4px 2px; }
+#guide .sub { color: var(--muted); margin: 0 4px 6px; }
+#guide .card { margin-top: 12px; }
+#guide .card h3 { font-size: 17px; margin: 0 0 8px; }
+#guide ul, #guide ol { margin: 6px 0; padding-left: 22px; }
+#guide li { margin: 4px 0; }
+#guide .big { font-size: 20px; font-weight: 700; }
+#guide .contact { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+#guide .contact:first-of-type { border-top: 0; }
+#guide .contact a.call { background: var(--ok-bg); color: var(--ok); border-radius: var(--r-ctl); padding: 12px 16px; font-weight: 700; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+#guide .notes { white-space: pre-wrap; }
+@media print {
+  :root, :root.night { --bg: #fff; --card: #fff; --ink: #000; --muted: #444; --line: #999; --ok-bg: #fff; --ok: #000; --shadow: none; }
+  header, nav.tabs, .toast, .guide-actions, .demo, .modal { display: none !important; }
+  section:not(#guide) { display: none !important; }
+  body { padding: 0; }
+  #guide .card { box-shadow: none; border: 1px solid var(--line); break-inside: avoid; }
+  #guide .contact a.call { border: 1px solid var(--line); }
+}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3.5c3.2 4 5.5 6.9 5.5 10a5.5 5.5 0 0 1-11 0c0-3.1 2.3-6 5.5-10z"/></symbol><symbol id="i-mound" viewBox="0 0 24 24"><rect x="4.5" y="14.5" width="15" height="5" rx="2.5"/><rect x="7" y="9.5" width="10" height="5" rx="2.5"/><path d="M12.5 4.5c1.600 1 1.800 2.400.8 3.600"/></symbol><symbol id="i-exit" viewBox="0 0 24 24"><path d="M10 4.5H6.5a1.5 1.5 0 0 0-1.5 1.5v12a1.5 1.5 0 0 0 1.5 1.5H10M14.5 8l4 4-4 4M18.5 12H9.5"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.5 20 18.5H4z"/><path d="M12 10v4M12 16.5v.01"/></symbol><symbol id="i-bowl" viewBox="0 0 24 24"><path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M9 20h6"/><path d="M12 4v3"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M18 6l-1.4 1.4M7.4 16.6 6 18"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M5 9c4 1 10 1 14 0M5 15c4-1 10-1 14 0"/></symbol><symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 4c.6 4.4 2.6 6.4 7 7-4.4.6-6.4 2.6-7 7-.6-4.4-2.6-6.4-7-7 4.4-.6 6.4-2.6 7-7z"/></symbol><symbol id="i-walk" viewBox="0 0 24 24"><circle cx="6.5" cy="17.5" r="2"/><circle cx="17.5" cy="6.5" r="2"/><path d="M8.3 16.5c3-1 1-4.5 3.7-5.5s4 0 4.3-3"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/></symbol><symbol id="i-list" viewBox="0 0 24 24"><path d="M9 7h10M9 12h10M9 17h10"/><path d="M5 7v.01M5 12v.01M5 17v.01"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="m12 4 2.5 5.1 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 19.5S4.5 15 4.5 9.5A4 4 0 0 1 12 7.8 4 4 0 0 1 19.5 9.5C19.5 15 12 19.5 12 19.5z"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M4.5 8h3l1.5-2.5h6L16.5 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></symbol></svg>
 
 <div id="setup" class="hidden">
   <h1>🐾 Riley</h1>
@@ -270,11 +315,11 @@ body.console #consoleTip { display: block; margin-top: 10px; }
 
 <div id="app" class="hidden">
   <header>
-    <img class="avatar hidden" id="hdrPhoto" alt="">
+    <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" class="avatar hidden" id="hdrPhoto" alt="">
     <div class="title"><h1 id="dogName">Riley</h1><div class="age" id="age"></div></div>
     <div class="clock" id="clock"></div>
-    <button class="iconbtn tab-only" id="viewToggle" title="Switch to console view" aria-label="Switch to console view">🖥️</button>
-    <button class="iconbtn tab-only" id="gear" title="Settings" aria-label="Settings">⚙️</button>
+    <button class="iconbtn tab-only" id="viewToggle" title="Switch to console view" aria-label="Switch to console view">Console</button>
+    <button class="iconbtn tab-only" id="gear" title="Settings" aria-label="Settings">Settings</button>
   </header>
   <div class="demo hidden" id="demoNote">Demo mode: add your Firebase config to sync between devices.</div>
 
@@ -291,28 +336,28 @@ body.console #consoleTip { display: block; margin-top: 10px; }
           <li>Nothing in 5 min? Back in, supervise, tap <b>Nothing</b></li>
         </ol>
       </div>
-      <button class="photo-nudge phone-only hidden" id="photoNudge"><span>📸</span><span>Today's photo not taken yet</span><span>Take it</span></button>
+      <button class="photo-nudge phone-only hidden" id="photoNudge"><span>Today's photo not taken yet</span><span>Take it</span></button>
       <div class="tiles">
-        <div class="tile" id="tOut"><div class="label">🚪 Next trip out</div><div class="big">–</div><div class="sub"></div></div>
-        <div class="tile" id="tPoo"><div class="label">💩 Since poo</div><div class="big">–</div><div class="sub"></div></div>
-        <div class="tile" id="tMeal"><div class="label">🍽️ Meals today</div><div class="big">–</div><div class="meals"></div><div class="sub"></div></div>
-        <div class="tile" id="tSleep"><div class="label">😴 Sleep</div><div class="big">–</div><div class="sub"></div></div>
+        <div class="tile" id="tOut"><div class="label">Next trip out</div><div class="big">–</div><div class="sub"></div></div>
+        <div class="tile" id="tPoo"><div class="label">Since poo</div><div class="big">–</div><div class="sub"></div></div>
+        <div class="tile" id="tMeal"><div class="label">Meals today</div><div class="big">–</div><div class="meals"></div><div class="sub"></div></div>
+        <div class="tile" id="tSleep"><div class="label">Sleep</div><div class="big">–</div><div class="sub"></div></div>
       </div>
       <div id="actions">
         <div class="group-label has-hint">Outside<span class="earlier" id="earlierHint">Hold a button to log earlier</span></div>
         <div class="actions out">
-          <button class="act primary" data-type="wee"><span class="e">💧</span>Wee</button>
-          <button class="act primary" data-type="poo"><span class="e">💩</span>Poo</button>
-          <button class="act primary soft" data-type="out"><span class="e">🚪</span>Nothing</button>
+          <button class="act primary" data-type="wee"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-drop"/></svg></span>Wee</button>
+          <button class="act primary" data-type="poo"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-mound"/></svg></span>Poo</button>
+          <button class="act primary soft" data-type="out"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-exit"/></svg></span>Nothing</button>
         </div>
         <div class="group-label">Indoors</div>
         <div class="actions other">
-          <button class="act" data-type="accident"><span class="e">⚠️</span>Accident</button>
-          <button class="act" data-type="meal"><span class="e">🍽️</span>Meal</button>
-          <button class="act" data-type="nap" id="napBtn"><span class="e">😴</span><span>Nap</span></button>
-          <button class="act" data-type="play"><span class="e">🎾</span>Play</button>
-          <button class="act" data-type="excited"><span class="e">🎉</span>Excited</button>
-          <button class="act" data-type="walk"><span class="e">🦮</span>Walk</button>
+          <button class="act" data-type="accident"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg></span>Accident</button>
+          <button class="act" data-type="meal"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-bowl"/></svg></span>Meal</button>
+          <button class="act" data-type="nap" id="napBtn"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg></span><span>Nap</span></button>
+          <button class="act" data-type="play"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-ball"/></svg></span>Play</button>
+          <button class="act" data-type="excited"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span>Excited</button>
+          <button class="act" data-type="walk"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-walk"/></svg></span>Walk</button>
         </div>
       </div>
       <div class="sheet hidden" id="accSheet">
@@ -325,10 +370,12 @@ body.console #consoleTip { display: block; margin-top: 10px; }
     <div>
       <!-- ================= TODAY ================= -->
       <section id="today" class="hidden">
-        <div id="coachTodayWrap"><h2 class="first-h2">Suggestions</h2><div class="coach" id="coachToday"></div></div>
         <h2 class="first-h2">Today</h2>
         <div class="counts" id="counts"></div>
         <div class="counts" id="byPerson" style="margin-top:8px"></div>
+        <h2>Timeline</h2>
+        <div class="list" id="timeline"></div>
+        <div id="coachTodayWrap"><h2>Suggestions</h2><div class="coach" id="coachToday"></div></div>
         <div id="foodCard">
           <h2>Food</h2>
           <div class="card">
@@ -340,8 +387,6 @@ body.console #consoleTip { display: block; margin-top: 10px; }
             <div class="muted" style="font-size:12px;display:flex;justify-content:space-between"><span>7 days ago</span><span>Today</span></div>
           </div>
         </div>
-        <h2>Timeline</h2>
-        <div class="list" id="timeline"></div>
         <div id="consoleTip"></div>
       </section>
 
@@ -367,7 +412,7 @@ body.console #consoleTip { display: block; margin-top: 10px; }
               <select id="hKind">
                 <option>Vaccination</option><option>Vet visit</option><option>Grooming</option><option>Microchip</option><option>Other</option>
               </select>
-              <input id="hDate" type="date">
+              <input id="hDate" type="date" aria-label="Due date">
             </div>
             <input id="hTitle" placeholder="Note (optional), e.g. 2nd jab">
             <button class="btn" id="hAdd">Add</button>
@@ -432,9 +477,19 @@ body.console #consoleTip { display: block; margin-top: 10px; }
       <div class="grid" id="photoGrid"></div>
     </section>
 
+    <!-- ================= SITTER GUIDE ================= -->
+    <section id="guide" class="hidden">
+      <div class="guide-actions">
+        <button class="btn ghost" id="guideBack">‹ Back</button>
+        <button class="btn ghost" id="guidePrint">Print</button>
+      </div>
+      <div id="guideBody"></div>
+    </section>
+
     <!-- ================= SETTINGS ================= -->
     <section id="settings" class="hidden">
-      <h2 class="first-h2">This device</h2>
+      <button class="btn ghost" id="openGuide" style="width:100%;min-height:48px">Sitter guide – routine, contacts and notes</button>
+      <h2>This device</h2>
       <div class="field"><label for="sMe">Who uses this phone</label><select id="sMe"></select></div>
       <div class="field"><label for="sView">View</label>
         <select id="sView"><option value="auto">Automatic</option><option value="phone">Phone</option><option value="console">Home console (iPad)</option></select></div>
@@ -470,17 +525,34 @@ body.console #consoleTip { display: block; margin-top: 10px; }
         <div class="field" style="margin:0"><label for="sWorm">Worming</label><input id="sWorm" type="number" min="7" max="180"></div>
         <div class="field" style="margin:0"><label for="sFlea">Flea &amp; tick</label><input id="sFlea" type="number" min="7" max="180"></div>
       </div>
+      <h2>Sitter guide details</h2>
+      <p class="muted" style="margin:0 4px 10px;font-size:14px">Shown on the sitter guide. Anything you leave blank is left out.</p>
+      <div class="field"><label for="sFood">Food brand</label><input id="sFood" placeholder="e.g. the bag's name"></div>
+      <div class="field"><label for="sMealTimes">Meal times</label><input id="sMealTimes" placeholder="e.g. 07:30, 11:30, 15:30, 19:00"></div>
+      <div class="field"><label for="sVet">Vet – name</label><input id="sVet"></div>
+      <div class="two form" style="margin:0 0 12px">
+        <div class="field" style="margin:0"><label for="sVetPh">Vet – phone</label><input id="sVetPh" type="tel" inputmode="tel"></div>
+        <div class="field" style="margin:0"><label for="sEmPh">Emergency vet – phone</label><input id="sEmPh" type="tel" inputmode="tel"></div>
+      </div>
+      <div class="field"><label for="sVetAddr">Vet – address</label><input id="sVetAddr" autocomplete="street-address"></div>
+      <div class="field"><label for="sEmName">Emergency vet – name and address</label><input id="sEmName"></div>
+      <div class="two form" style="margin:0 0 12px">
+        <div class="field" style="margin:0"><label for="sPh1" id="sPh1L">Person 1 – phone</label><input id="sPh1" type="tel" inputmode="tel"></div>
+        <div class="field" style="margin:0"><label for="sPh2" id="sPh2L">Person 2 – phone</label><input id="sPh2" type="tel" inputmode="tel"></div>
+      </div>
+      <div class="field"><label for="sCrate">Crate notes</label><textarea id="sCrate" rows="2" maxlength="600"></textarea></div>
+      <div class="field"><label for="sQuirks">Quirks &amp; notes</label><textarea id="sQuirks" rows="3" maxlength="1000"></textarea></div>
       <button class="btn" id="sSave" style="width:100%">Save</button>
       <button class="btn ghost" id="leave" style="width:100%;margin-top:24px">Leave household on this device</button>
     </section>
   </main>
 
   <nav class="tabs" id="tabs">
-    <button data-tab="log" class="on"><span class="e">🐾</span>Log</button>
-    <button data-tab="today"><span class="e">📋</span>Today</button>
-    <button data-tab="train"><span class="e">🎓</span>Train</button>
-    <button data-tab="health"><span class="e">💉</span>Health</button>
-    <button data-tab="photos"><span class="e">📸</span>Photos</button>
+    <button data-tab="log" class="on"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></span>Log</button>
+    <button data-tab="today"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg></span>Today</button>
+    <button data-tab="train"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></span>Train</button>
+    <button data-tab="health"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg></span>Health</button>
+    <button data-tab="photos"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg></span>Photos</button>
   </nav>
 </div>
 
@@ -525,7 +597,7 @@ body.console #consoleTip { display: block; margin-top: 10px; }
 </div>
 
 <div class="viewer hidden" id="viewer">
-  <div class="vtop"><span id="vTitle"></span><button id="vClose" style="background:none;color:#fff;font-size:26px">✕</button></div>
+  <div class="vtop"><span id="vTitle"></span><button id="vClose" style="background:none;color:var(--on-media);font-size:26px">✕</button></div>
   <div class="imgs" id="vImgs"></div>
   <div class="vbar">
     <button id="vPrev">‹ Older</button>

@@ -144,13 +144,14 @@ async function keepAwake() {
 }
 document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && isConsole() && keepAwake());
 
-const TABS = ["log", "today", "train", "health", "photos", "settings"];
+const TABS = ["log", "today", "train", "health", "photos", "settings", "guide"];
 function showTab(t) {
   if (!TABS.includes(t)) t = "log";
   ls.set("riley:tab", t);
   for (const id of TABS) $("#" + id).classList.toggle("hidden", id !== t);
   document.querySelectorAll("nav.tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === t));
   scrollTo(0, 0);
+  if (t === "guide") renderGuide();
 }
 document.querySelectorAll("nav.tabs button").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
 
@@ -201,7 +202,7 @@ function toast(msg, buttons = [], ms = 5000) {
 const portion = () => (shared.dailyGrams ? Math.round(shared.dailyGrams / Math.max(1, shared.mealsPerDay || 4)) : 0);
 
 async function log(type, at = Date.now()) {
-  const by = await who(`${EMOJI[type]} ${LABEL[type]} – who's logging?`);
+  const by = await who(`${LABEL[type]} – who's logging?`);
   if (by === null) return;
   const ev = { type, at, by };
   if (type === "meal" && portion()) ev.grams = portion();
@@ -210,9 +211,9 @@ async function log(type, at = Date.now()) {
   const undo = ["Undo", () => store.remove("events", id)];
   const when = Date.now() - at > MIN ? ` at ${hm(at)}` : "";
   if (type.startsWith("acc_")) toast(`Logged${when} – no telling off. Enzymatic cleaner, no bleach or ammonia`, [undo], 8000);
-  else if (type === "out") toast(`🚪 Logged${when} – supervise closely, try again in 10–15 min`, [undo], 8000);
-  else if (type === "meal") toast(`🍽️ Meal${ev.grams ? ` · ${ev.grams} g` : ""} logged${when}`, [undo, ["Edit", () => editEntry({ id, ...ev })]], 6000);
-  else toast(`${EMOJI[type]} ${LABEL[type]} logged${when}`, [undo]);
+  else if (type === "out") toast(`Logged${when} – supervise closely, try again in 10–15 min`, [undo], 8000);
+  else if (type === "meal") toast(`Meal${ev.grams ? ` · ${ev.grams} g` : ""} logged${when}`, [undo, ["Edit", () => editEntry({ id, ...ev })]], 6000);
+  else toast(`${LABEL[type]} logged${when}`, [undo]);
 }
 
 // ---------- log something that happened earlier ----------
@@ -250,7 +251,7 @@ function askWhen(title) {
 // Edit an existing entry's time (and grams, for meals). Keeps the entry on its original day.
 function editEntry(ev) {
   const modal = $("#editModal"), err = $("#editErr"), isMeal = ev.type === "meal";
-  $("#editTitle").textContent = `${EMOJI[ev.type] || ""} ${LABEL[ev.type] || ev.type}`;
+  $("#editTitle").textContent = `${LABEL[ev.type] || ev.type}`;
   $("#editTime").value = hm(ev.at);
   $("#editGramsWrap").classList.toggle("hidden", !isMeal);
   $("#editGrams").value = ev.grams ?? portion() ?? "";
@@ -309,17 +310,17 @@ $("#accSheet").onclick = (e) => {
 holdable($("#actions"), async (b) => {
   const t = b.dataset.type; if (!t) return;
   if (t === "accident") {
-    const at = await askWhen("⚠️ Accident – when?");
+    const at = await askWhen("Accident – when?");
     if (at !== null) { accAt = at; $("#accSheet").classList.remove("hidden"); }
     return;
   }
   const type = t === "nap" ? (isAsleep() ? "wake" : "sleep") : t;
-  const at = await askWhen(`${EMOJI[type]} ${LABEL[type]} – when?`);
+  const at = await askWhen(`${LABEL[type]} – when?`);
   if (at !== null) log(type, at);
 });
 holdable($("#accSheet"), async (b) => {
   const v = b.dataset.acc; if (!v) return;
-  const at = await askWhen(`⚠️ ${LABEL[v]} – when?`);
+  const at = await askWhen(`${LABEL[v]} – when?`);
   if (at !== null) { $("#accSheet").classList.add("hidden"); accAt = null; log(v, at); }
 });
 
@@ -400,7 +401,8 @@ function tipCard(s, compact = false) {
   const el = document.createElement("div");
   el.className = "tip " + s.level;
   const src = s.source?.url ? `<a href="${esc(s.source.url)}" target="_blank" rel="noopener">${esc(s.source.name)}</a>` : esc(s.source?.name || "");
-  el.innerHTML = `<h3>${esc(s.title)}</h3><p>${esc(s.body)}</p>` + (compact ? "" :
+  const LEVEL = { do: "To do", soon: "Soon", info: "Good to know" };
+  el.innerHTML = `<div class="tiptitle"><h3>${esc(s.title)}</h3><span class="tag ${esc(s.level)}">${LEVEL[s.level] || ""}</span></div><p>${esc(s.body)}</p>` + (compact ? "" :
     `<div class="foot"><span class="src">${src}</span>
       ${s.action ? `<button class="btn small act-btn">${esc(s.action.label)}</button>` : ""}
       <button class="later">${s.level === "info" ? "Got it" : "Not now"}</button></div>`);
@@ -416,11 +418,18 @@ function tipCard(s, compact = false) {
 }
 const dismiss = (id, days) => store.setDoc("settings", "main", { dismissed: { [id]: Date.now() + days * DAY } });
 
+let coachOpen = false;  // Today shows one suggestion; the rest are one tap away
 function renderCoach() {
   const all = suggestions();
   const todayList = all.filter((s) => s.area !== "training"), trainList = all.filter((s) => s.area === "training");
   const ct = $("#coachToday"); ct.innerHTML = "";
-  todayList.forEach((s) => ct.append(tipCard(s)));
+  (coachOpen ? todayList : todayList.slice(0, 1)).forEach((s) => ct.append(tipCard(s)));
+  if (todayList.length > 1) {
+    const more = document.createElement("button"); more.className = "btn ghost more";
+    more.textContent = coachOpen ? "Show fewer" : `+${todayList.length - 1} more suggestion${todayList.length > 2 ? "s" : ""}`;
+    more.onclick = () => { coachOpen = !coachOpen; renderCoach(); };
+    ct.append(more);
+  }
   $("#coachTodayWrap").classList.toggle("hidden", !todayList.length);
   const tr = $("#coachTrain"); tr.innerHTML = "";
   if (!trainList.length) tr.innerHTML = `<div class="card muted">Nothing new – keep practising little and often.</div>`;
@@ -478,10 +487,10 @@ function render() {
 
   // Sleep
   const tsl = $("#tSleep");
-  tsl.querySelector(".label").textContent = asleep ? "😴 Asleep for" : "☀️ Awake for";
+  tsl.querySelector(".label").textContent = asleep ? "Asleep for" : "Awake for";
   tsl.querySelector(".big").textContent = ls_ ? ago(now - ls_.at) : "–";
   tsl.querySelector(".sub").textContent = `${ago(sleepToday())} sleep today`;
-  const nb = $("#napBtn"); nb.querySelector(".e").textContent = asleep ? "☀️" : "😴"; nb.lastElementChild.textContent = asleep ? "Woke up" : "Nap";
+  const nb = $("#napBtn"); nb.querySelector("use").setAttribute("href", asleep ? "#i-sun" : "#i-moon"); nb.lastElementChild.textContent = asleep ? "Woke up" : "Nap";
 
   // Nudge (toilet first, then feeding)
   const nudge = $("#nudge"); let msg = "", level = "calm", showRoutine = false;
@@ -502,7 +511,7 @@ function render() {
   const av = $("#hdrPhoto");
   if (latest?.thumb) { if (av.src !== latest.thumb) av.src = latest.thumb; av.classList.remove("hidden"); } else av.classList.add("hidden");
 
-  renderToday(); renderCoach(); renderUpcoming();
+  renderToday(); renderCoach(); renderUpcoming(); renderGuide();
 }
 
 function ageText() {
@@ -520,8 +529,8 @@ function renderToday() {
   const c = (ty, list = t) => list.filter((e) => ty.includes(e.type)).length;
   const outside = c(["wee", "poo"]), acc = c(["acc_wee", "acc_poo"]);
   $("#counts").innerHTML = [
-    ["🚪 Trips out", c(OUT_TYPES)], ["💧 Wees outside", c(["wee"])], ["💩 Poos outside", c(["poo"])],
-    ["⚠️ Accidents", acc], ["✅ Went outside", outside + acc ? `${Math.round((100 * outside) / (outside + acc))}%` : "–"],
+    ["Trips out", c(OUT_TYPES)], ["Wees outside", c(["wee"])], ["Poos outside", c(["poo"])],
+    ["Accidents", acc], ["Went outside", outside + acc ? `${Math.round((100 * outside) / (outside + acc))}%` : "–"],
   ].map(([l, v]) => `<span class="chip">${l} <b>${v}</b></span>`).join("");
 
   // who did what today
@@ -539,7 +548,7 @@ function renderToday() {
     const isMeal = e.type === "meal";
     const hint = isMeal ? "Tap to edit time or grams" : i === 0 ? "Tap to edit time" : "";
     row.innerHTML = `<span class="t">${hm(e.at)}</span>
-      <button class="what">${EMOJI[e.type] || ""} ${esc(LABEL[e.type] || e.type)}${isMeal && e.grams ? ` · ${e.grams} g` : ""}${hint ? `<small>${hint}</small>` : ""}</button>
+      <button class="what">${esc(LABEL[e.type] || e.type)}${isMeal && e.grams ? ` · ${e.grams} g` : ""}${hint ? `<small>${hint}</small>` : ""}</button>
       ${byline(e.by)}<button class="x" aria-label="Delete">×</button>`;
     row.querySelector(".what").onclick = () => editEntry(e);
     row.querySelector(".x").onclick = () => confirm(`Delete "${LABEL[e.type]}" at ${hm(e.at)}?`) && store.remove("events", e.id);
@@ -617,11 +626,11 @@ function renderHealth() {
     const history = treatments.filter((t) => t.kind === kind).sort((a, b) => b.at - a.at).slice(0, 4);
     card.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <h3>${kind === "worming" ? "🪱" : "🕷️"} ${TREAT[kind]}</h3>${due ? dueTag(daysUntil(due)) || `<span class="tag ok">Next ${fmtDay(due)}</span>` : `<span class="tag soon">Not logged</span>`}
+        <h3>${TREAT[kind]}</h3>${due ? dueTag(daysUntil(due)) || `<span class="tag ok">Next ${fmtDay(due)}</span>` : `<span class="tag soon">Not logged</span>`}
       </div>
       <div class="muted" style="font-size:14px">${l ? `Last: ${fmtDay(l.at)}${l.product ? " · " + esc(l.product) : ""} · ${esc(l.by || "")}` : "Ask the breeder when he was last treated, and log it here."} · every ${gap} days</div>
       <div class="form"><div class="three">
-        <input type="date" class="t-date" value="${dayKey(Date.now())}">
+        <input type="date" class="t-date" aria-label="Date given" value="${dayKey(Date.now())}">
         <input class="t-prod" placeholder="Product" value="${esc(l?.product || "")}">
         <button class="btn small t-log">Log</button>
       </div></div>
@@ -729,7 +738,7 @@ function renderPhotos() {
     grid.append(b);
   });
   $("#photoTools").classList.toggle("hidden", photos.length < 2);
-  $("#takePhoto").textContent = photos.some((p) => p.day === dayKey(Date.now())) ? "📸 Retake today's photo" : "📸 Take today's photo";
+  $("#takePhoto").textContent = photos.some((p) => p.day === dayKey(Date.now())) ? "Retake today's photo" : "Take today's photo";
 }
 function weightNear(ms) {
   let best = null;
@@ -752,7 +761,7 @@ $("#photoInput").onchange = async (e) => {
     const { full, thumb, w, h } = await compressPhoto(file);
     await store.setDoc("photoFull", day, { day, full });
     await store.setDoc("photos", day, { day, thumb, w, h, at: Date.now(), by: me });
-    toast("📸 Today's photo saved");
+    toast("Today's photo saved");
   } catch (err) { toast("Couldn't save photo: " + err.message, [], 8000); }
 };
 
@@ -798,6 +807,75 @@ $("#playLapse").onclick = () => {
   }, 350);
 };
 
+
+// =====================================================================
+// Sitter guide (read-only; every figure comes from settings and GUIDELINES.md)
+// =====================================================================
+const phoneHref = (p) => "tel:" + String(p || "").replace(/[^\d+]/g, "");
+function renderGuide() {
+  const body = $("#guideBody"); if (!body || $("#guide").classList.contains("hidden")) return;
+  const name = esc(shared.dogName || "Riley"), n = Math.max(1, +shared.mealsPerDay || 4), per = portion();
+  const interval = shared.weeIntervalMin || 60, bed = esc(shared.bedtime || "22:00");
+  const mins = (ms) => Math.round(ms / MIN);
+  const card = (title, inner) => inner ? `<div class="card"><h3>${title}</h3>${inner}</div>` : "";
+  const contact = (label, who, phone, addr) => (who || phone || addr) ? `<div class="contact"><div><b>${esc(label)}</b>${who ? `<br>${esc(who)}` : ""}${addr ? `<br><span class="muted">${esc(addr)}</span>` : ""}</div>${phone ? `<a class="call" href="${esc(phoneHref(phone))}">📞 ${esc(phone)}</a>` : ""}</div>` : "";
+
+  const meals = `<p class="big">${n} meal${n === 1 ? "" : "s"} a day${per ? ` · ${per} g each` : ""}</p>
+    ${per ? `<p class="muted">${esc(shared.dailyGrams)} g in total for the day.</p>` : `<p class="muted">Portion not set yet – follow the feeding guide on the bag.</p>`}
+    ${shared.foodBrand ? `<p>Food: <b>${esc(shared.foodBrand)}</b></p>` : ""}
+    ${shared.mealTimes ? `<p>Meal times: <b>${esc(shared.mealTimes)}</b></p>` : ""}`;
+
+  const toilet = `<p class="big">Out every ${interval} min while awake</p>
+    <p>Also take ${name} out:</p>
+    <ul>
+      <li>straight after waking up</li>
+      <li>${mins(AFTER_MEAL)} min after a meal</li>
+      <li>${mins(AFTER_PLAY)} min after play or training</li>
+      <li>${mins(AFTER_PLAY)} min after visitors arrive or any excitement</li>
+      <li>last thing at night – from 30 min before bedtime (${bed})</li>
+      <li>straight after an accident, to finish outside</li>
+      <li>${mins(RETRY_AFTER_NOTHING)} min after a trip where nothing happened</li>
+    </ul>
+    <p><b>Signs he needs to go:</b> panting, intense sniffing at the floor, circling, or looking at you and then at the door.</p>`;
+
+  const routine = `<ol>
+      <li>Say <b>“Outside”</b>, then go to his toilet spot. Keep it calm and boring.</li>
+      <li>At the spot, say <b>“Busy busy”</b>, then ignore him until he has gone.</li>
+      <li>As he finishes, say <b>“Good”</b> and give a treat. Play comes <i>after</i> he has gone.</li>
+      <li>Nothing in 5 minutes? Go back inside, supervise closely and try again in 10–15 minutes.</li>
+    </ol>`;
+
+  const accidents = `<p>An accident is just an accident. Please don’t tell ${name} off or raise your voice – he’ll only learn to go in hidden places.</p>
+    <ul><li>If you catch him in the act, calmly say “Outside” and take him to his spot. Reward him if he finishes there.</li>
+      <li>Clean up while he’s busy with something else, using an <b>enzymatic cleaner</b> (or biological laundry liquid and water). No bleach or ammonia – they leave a toilet smell.</li></ul>`;
+
+  const night = `<p>Bedtime is around <b>${bed}</b>. Take ${name} out last thing, then settle him.</p>
+    <ul><li>Only crate him when he’s tired and satisfied, after play.</li>
+      <li>Load a Lickimat, Kong or snuffle mat first.</li>
+      <li>If he’s fallen asleep elsewhere, move him to his bed.</li>
+      <li>If he whines, ignore it and let him out when he’s quiet.</li></ul>
+    ${shared.crateNotes ? `<p class="notes">${esc(shared.crateNotes)}</p>` : ""}`;
+
+  const m = members(), ph = shared.ownerPhones || [];
+  const contacts = [
+    contact("Vet", shared.vetName, shared.vetPhone, shared.vetAddress),
+    contact("Emergency vet", shared.emergencyVetName, shared.emergencyVetPhone, ""),
+    ...m.map((who, i) => contact("Owner", who, ph[i], "")),
+  ].join("");
+
+  body.innerHTML = `<h1>${name}’s guide</h1><p class="sub">${esc(ageText())}</p>
+    ${card("Food", meals)}
+    ${card("Toilet trips", toilet)}
+    ${card("The toilet routine", routine)}
+    ${card("Accidents", accidents)}
+    ${card("Bedtime and crate", night)}
+    ${card("Who to call", contacts || `<p class="muted">Add the vet and owners’ phone numbers in Settings → Sitter guide details.</p>`)}
+    ${shared.quirks ? card("Quirks &amp; notes", `<p class="notes">${esc(shared.quirks)}</p>`) : ""}`;
+}
+$("#openGuide").onclick = () => { showTab("guide"); renderGuide(); };
+$("#guideBack").onclick = () => showTab("settings");
+$("#guidePrint").onclick = () => print();
+
 // =====================================================================
 // Settings
 // =====================================================================
@@ -813,6 +891,13 @@ function fillSettings() {
   $("#sMeals").value = shared.mealsPerDay; $("#sGrams").value = shared.dailyGrams || "";
   $("#sInt").value = shared.weeIntervalMin; $("#sBed").value = shared.bedtime || "22:00";
   $("#sWorm").value = shared.intervals.worming; $("#sFlea").value = shared.intervals.flea;
+  const ph = shared.ownerPhones || [];
+  $("#sFood").value = shared.foodBrand || ""; $("#sMealTimes").value = shared.mealTimes || "";
+  $("#sVet").value = shared.vetName || ""; $("#sVetPh").value = shared.vetPhone || ""; $("#sVetAddr").value = shared.vetAddress || "";
+  $("#sEmName").value = shared.emergencyVetName || ""; $("#sEmPh").value = shared.emergencyVetPhone || "";
+  $("#sPh1").value = ph[0] || ""; $("#sPh2").value = ph[1] || "";
+  $("#sPh1L").textContent = `${m[0] || "Person 1"} – phone`; $("#sPh2L").textContent = `${m[1] || "Person 2"} – phone`;
+  $("#sCrate").value = shared.crateNotes || ""; $("#sQuirks").value = shared.quirks || "";
 }
 $("#sSave").onclick = async () => {
   const clamp = (v, lo, hi, d) => Math.min(hi, Math.max(lo, Math.round(+v) || d));
@@ -828,6 +913,11 @@ $("#sSave").onclick = async () => {
     adultSize: $("#sSize").value, mealsPerDay: clamp($("#sMeals").value, 1, 6, 4), dailyGrams: grams,
     weeIntervalMin: clamp($("#sInt").value, 15, 480, 60), bedtime: $("#sBed").value || "22:00",
     intervals: { worming: clamp($("#sWorm").value, 7, 180, 14), flea: clamp($("#sFlea").value, 7, 180, 30) },
+    foodBrand: $("#sFood").value.trim(), mealTimes: $("#sMealTimes").value.trim(),
+    vetName: $("#sVet").value.trim(), vetPhone: $("#sVetPh").value.trim(), vetAddress: $("#sVetAddr").value.trim(),
+    emergencyVetName: $("#sEmName").value.trim(), emergencyVetPhone: $("#sEmPh").value.trim(),
+    ownerPhones: [$("#sPh1").value.trim(), $("#sPh2").value.trim()],
+    crateNotes: $("#sCrate").value.trim(), quirks: $("#sQuirks").value.trim(),
   };
   if (grams !== (+shared.dailyGrams || 0)) { patch.gramsSetWeight = weights.length ? weights[weights.length - 1].kg : null; patch.gramsSetAt = Date.now(); }
   await store.setDoc("settings", "main", patch);

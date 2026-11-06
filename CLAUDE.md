@@ -27,7 +27,7 @@ A household puppy log for Riley. The iPad runs it as a wall console, and two pho
 | `photos` / `photoFull` | doc id = `YYYY-MM-DD`. `photos` holds `{thumb, w, h, at, by}` and `photoFull` holds `{full}` (loaded only in the viewer) |
 | `members` | doc id = auth uid: `{role: "owner", name, email, createdAt}`. Written only by the owner claiming their own record |
 | `meta/owners` | `{emails: [..]}` – verified Google emails allowed to be owners (max 2, lower-case). The first Google account to arrive creates it |
-| `settings/main` | `members[2]`, `dogName`, `birthDate`, `arrivalDate`, `adultSize`, `mealsPerDay`, `dailyGrams`, `gramsSetWeight`, `weeIntervalMin`, `bedtime`, `intervals{worming,flea}`, `train{nameLevel}`, `dismissed{id: untilMs}` |
+| `settings/main` | `members[2]`, `dogName`, `birthDate`, `arrivalDate`, `adultSize`, `mealsPerDay`, `dailyGrams`, `gramsSetWeight`, `weeIntervalMin`, `bedtime`, `intervals{worming,flea}`, `train{nameLevel}`, `dismissed{id: untilMs}`, sitter-guide info: `foodBrand`, `mealTimes`, `vetName/vetPhone/vetAddress`, `emergencyVetName/emergencyVetPhone`, `ownerPhones[2]` (same order as `members`), `crateNotes`, `quirks` |
 
 A new event type needs entries in `LABEL` and `EMOJI`, and in `OUT_TYPES` if it counts as a trip outside.
 
@@ -52,6 +52,6 @@ There are exactly two household `members`. Every record stores `by`. Phones log 
 - **New ideas** found while working become a new issue (`gh issue create`), not scope creep.
 
 ## Design
-- Design work uses the **Impeccable** skills (`/impeccable …`). `PRODUCT.md` (who the app is for) and `DESIGN.md` (the visual system) are the design source of truth once they exist. Read them before UI changes, and keep them updated when the system changes.
+- Design work uses the **Impeccable** skills (`/impeccable …`). `PRODUCT.md` (who the app is for) and `DESIGN.md` (the visual system, "The Kitchen Noticeboard") are the design source of truth. Read them before UI changes, and keep them updated when the system changes. `DESIGN.md` also lists known contrast gaps still to fix.
 - The UI is used one-handed, in the garden, at 6am, by tired people. Prefer big targets, high contrast and calm colours, and no clever-but-slow interactions.
 - Design tokens live as CSS variables in `:root` in `index.html`. If `DESIGN.md` changes a token, change it there too, and check dark mode and console night mode.
