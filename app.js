@@ -146,6 +146,11 @@ function consoleToSettings() {
   if (!confirm("Open Settings? This switches this device to phone view. Use the Console button to switch back.")) return;
   ls.set("riley:view", "phone"); applyView(); showTab("settings");
 }
+// Back from console to phone view. On a phone it's immediate; on a tablet or desktop it asks first (the iPad is shared).
+$("#phoneView").onclick = () => {
+  if (innerWidth >= 700 && !confirm("Switch this device to phone view? Use the monitor button to switch back.")) return;
+  ls.set("riley:view", "phone"); applyView();
+};
 $("#gear").onclick = () => (isConsole() ? consoleToSettings() : showTab("settings"));
 
 let wakeLock;
