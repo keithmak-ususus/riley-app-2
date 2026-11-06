@@ -12,6 +12,11 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 const MIN = 60000, DAY = 864e5, WEEK = 7 * DAY;
 const LABEL = { wee: "Wee outside", poo: "Poo outside", out: "Out – nothing", acc_wee: "Wee indoors", acc_poo: "Poo indoors",
   meal: "Meal", play: "Play / training", excited: "Visitors / excited", sleep: "Fell asleep", wake: "Woke up", walk: "Walk" };
+// Optional poo detail (issue #11). General notes for the vet, never a diagnosis.
+const SHAPES = { firm: "Firm", soft: "Soft", loose: "Loose", watery: "Watery" };
+const COLOURS = { usual: "Usual", dark: "Dark", pale: "Pale", green: "Green or yellow", red: "Red-streaked" };
+const isPoo = (t) => t === "poo" || t === "acc_poo";
+const pooDetail = (e) => [SHAPES[e.shape], COLOURS[e.colour], e.note].filter(Boolean).join(" · ");
 const EMOJI = { wee: "💧", poo: "💩", out: "🚪", acc_wee: "⚠️", acc_poo: "⚠️", meal: "🍽️", play: "🎾", excited: "🎉",
   sleep: "😴", wake: "☀️", walk: "🦮" };
 const OUT_TYPES = ["wee", "poo", "out", "walk"];  // anything that counts as a trip outside
@@ -210,9 +215,10 @@ async function log(type, at = Date.now()) {
   navigator.vibrate?.(30);
   const undo = ["Undo", () => store.remove("events", id)];
   const when = Date.now() - at > MIN ? ` at ${hm(at)}` : "";
-  if (type.startsWith("acc_")) toast(`Logged${when} – no telling off. Enzymatic cleaner, no bleach or ammonia`, [undo], 8000);
+  if (type.startsWith("acc_")) toast(`Logged${when} – no telling off. Enzymatic cleaner, no bleach or ammonia`, type === "acc_poo" ? [undo, ["Add detail", () => editEntry({ id, ...ev })]] : [undo], 8000);
   else if (type === "out") toast(`Logged${when} – supervise closely, try again in 10–15 min`, [undo], 8000);
   else if (type === "meal") toast(`Meal${ev.grams ? ` · ${ev.grams} g` : ""} logged${when}`, [undo, ["Edit", () => editEntry({ id, ...ev })]], 6000);
+  else if (isPoo(type)) toast(`${LABEL[type]} logged${when}`, [undo, ["Add detail", () => editEntry({ id, ...ev })]], 8000);
   else toast(`${LABEL[type]} logged${when}`, [undo]);
 }
 
@@ -255,6 +261,18 @@ function editEntry(ev) {
   $("#editTime").value = hm(ev.at);
   $("#editGramsWrap").classList.toggle("hidden", !isMeal);
   $("#editGrams").value = ev.grams ?? portion() ?? "";
+  const poo = isPoo(ev.type), pick = { shape: ev.shape || "", colour: ev.colour || "" };
+  $("#editPoo").classList.toggle("hidden", !poo);
+  $("#editNote").value = ev.note || "";
+  for (const [field, box] of [["shape", $("#editShape")], ["colour", $("#editColour")]]) {
+    box.innerHTML = Object.entries(field === "shape" ? SHAPES : COLOURS)
+      .map(([k, v]) => `<button type="button" data-v="${k}" aria-pressed="${pick[field] === k}">${esc(v)}</button>`).join("");
+    box.onclick = (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      pick[field] = pick[field] === b.dataset.v ? "" : b.dataset.v;   // tap again to clear
+      box.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.v === pick[field])));
+    };
+  }
   err.classList.add("hidden");
   const close = () => modal.classList.add("hidden");
   const fail = (msg) => { err.textContent = msg; err.classList.remove("hidden"); };
@@ -270,6 +288,12 @@ function editEntry(ev) {
       const g = Math.round(+$("#editGrams").value);
       if (!(g >= 0 && g < 2000)) return fail("Grams should be between 0 and 1999");
       if (g !== ev.grams) patch.grams = g;
+    }
+    if (poo) {
+      const note = $("#editNote").value.trim().slice(0, 140);
+      if (pick.shape !== (ev.shape || "")) patch.shape = pick.shape;
+      if (pick.colour !== (ev.colour || "")) patch.colour = pick.colour;
+      if (note !== (ev.note || "")) patch.note = note;
     }
     close();
     if (Object.keys(patch).length) await store.update("events", ev.id, patch);
@@ -546,7 +570,8 @@ function renderToday() {
   [...t].reverse().forEach((e, i) => {
     const row = document.createElement("div"); row.className = "row";
     const isMeal = e.type === "meal";
-    const hint = isMeal ? "Tap to edit time or grams" : i === 0 ? "Tap to edit time" : "";
+    const detail = isPoo(e.type) ? pooDetail(e) : "";
+    const hint = isMeal ? "Tap to edit time or grams" : detail ? esc(detail) : isPoo(e.type) && i === 0 ? "Tap to add detail" : i === 0 ? "Tap to edit time" : "";
     row.innerHTML = `<span class="t">${hm(e.at)}</span>
       <button class="what">${esc(LABEL[e.type] || e.type)}${isMeal && e.grams ? ` · ${e.grams} g` : ""}${hint ? `<small>${hint}</small>` : ""}</button>
       ${byline(e.by)}<button class="x" aria-label="Delete">×</button>`;

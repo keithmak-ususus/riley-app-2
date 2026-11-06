@@ -19,7 +19,7 @@ A household puppy log for Riley. The iPad runs it as a wall console, and two pho
 ## Data (`households/<code>/…`)
 | Collection | Shape |
 |---|---|
-| `events` | `{type, at, by, grams?}`. Types: `wee poo out acc_wee acc_poo meal play excited sleep wake walk` |
+| `events` | `{type, at, by, grams?, shape?, colour?, note?}` (`shape`/`colour`/`note` only on `poo` and `acc_poo`; `shape` = firm\|soft\|loose\|watery, `colour` = usual\|dark\|pale\|green\|red, `note` ≤ 140 chars; all optional, `""` = cleared). Types: `wee poo out acc_wee acc_poo meal play excited sleep wake walk` |
 | `treatments` | `{kind: "worming"\|"flea", at, product, by}`. Next due = last + `settings.intervals[kind]` days |
 | `training` | `{skill: "name", score 0–5, level}` · `{skill: "crate", minutes, whined}` · `{skill: "social", item, reaction: "happy"\|"unsure"}`, plus `at` and `by` |
 | `health` | reminders `{kind, title, due "YYYY-MM-DD", done, doneAt, doneBy}` |
