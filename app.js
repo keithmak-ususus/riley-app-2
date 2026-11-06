@@ -1,7 +1,7 @@
-import { openStore, DEMO } from "./store.js?v=1d152463";
-import { defaults } from "./config.js?v=1d152463";
-import { coach, NAME_LEVELS, SOCIAL_ITEMS } from "./coach.js?v=1d152463";
-import { compressPhoto } from "./photos.js?v=1d152463";
+import { openStore, DEMO } from "./store.js?v=f6cecbb5";
+import { defaults } from "./config.js?v=f6cecbb5";
+import { coach, NAME_LEVELS, SOCIAL_ITEMS } from "./coach.js?v=f6cecbb5";
+import { compressPhoto } from "./photos.js?v=f6cecbb5";
 
 const $ = (s) => document.querySelector(s);
 const ls = { get: (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
@@ -301,6 +301,7 @@ const byline = (name) => (name ? `<span class="byline">${badge(name)}${esc(name)
 // On the shared iPad, ask which of the two people is logging. Phones log as their owner.
 function who(title = "Who's logging?") {
   const m = members();
+  if (role === "sitter") return Promise.resolve(me);   // a sitter's own device always logs as the name on their invite
   if (!isConsole() || m.length < 2) return Promise.resolve(me || m[0] || "");
   return new Promise((resolve) => {
     const modal = $("#whoModal"), box = $("#whoPeople");
