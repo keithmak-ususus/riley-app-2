@@ -137,7 +137,7 @@ components:
 
 The app is a warm, well-lit household noticeboard. It is pinned to the kitchen wall on the iPad and sits in a pocket on two phones. One clear next action, plain big figures, and everything attributed to a person so nobody has to ask "when did he last go out?". It is practical before it is cute, and calm before it is clever. It is used one-handed, in the garden, at 6am, by tired people, so nothing is small, quiet or slow.
 
-**Minimal means subtraction.** There are no shadows, no card fills, no emoji icons and no tinted panels except when something needs attention. Structure comes from white space, hairline dividers (`--line`) and type size. The only filled shapes are the two Outside log buttons (terracotta), a warn or alert banner, and the primary button. Everything else is outlined or plain text. Tabs, log buttons, tiles and counts carry words only.
+**Minimal means subtraction.** There are no shadows, no card fills, no emoji and no tinted panels except when something needs attention. Structure comes from white space, hairline dividers (`--line`) and type size. The only filled shapes are the two Outside log buttons (terracotta), a warn or alert banner, and the primary button. Everything else is outlined or plain text. Tabs and log buttons carry a small line icon above the word; tiles, counts and everything else are words only.
 
 **Key Characteristics:**
 - One next action is always the loudest thing on the screen.
@@ -215,10 +215,13 @@ Quietly rounded, one dominant radius. Tokens: `--radius` 12px (log buttons, bann
 
 ## Components
 
+### Icons
+One set of hand-drawn inline SVG line icons (`<symbol id="i-…">` sprite at the top of `<body>`): 24px grid, 1.75 stroke, round caps, `currentColor`, so they follow light, dark, night and the white-on-terracotta buttons. Never emoji (they differ per device and read as childish). Add a new icon as another `<symbol>`; keep the same stroke.
+
 ### Primary log button
-- **Shape:** 12px corners, at least 88px tall on phones (64px for the indoor row, 72px on the console). Words only, no emoji.
+- **Shape:** 12px corners, at least 88px tall on phones (64px for the indoor row, 72px on the console). A 22–26px line icon above the label.
 - **Colour:** terracotta with white text for Wee and Poo; "Nothing" and every Indoors action are outlined (1.5px `--line`) with ink text.
-- **Behaviour:** a 15–16px label; pressed state scales to 96%. Long-press (about 0.5s) opens the "When?" sheet; a tap logs "now".
+- **Behaviour:** a line icon and a 15–16px label; pressed state scales to 96%. Long-press (about 0.5s) opens the "When?" sheet; a tap logs "now".
 
 ### Tile
 - **Style:** no card: a hairline above, 14px padding. A quiet 13px label, a 32px Display figure (42px on the console), a muted sub-line.
@@ -234,7 +237,7 @@ Quietly rounded, one dominant radius. Tokens: `--radius` 12px (log buttons, bann
 - **Style:** outlined pill (1px `--line`) for counts; tags are small tinted status pills (over, soon, ok).
 
 ### Tab bar
-- **Style:** fixed bottom bar with five text-only buttons; the active tab is ink and bold with a 2px terracotta bar above it; a small dot marks something waiting.
+- **Style:** fixed bottom bar with five buttons, each a 24px line icon over a 12px label; the active tab is ink and bold with a 2px terracotta bar above it; a small dot marks something waiting.
 
 ### Toast
 - **Style:** inverted pill (ink background, cream text), 14px corners, with an Undo or Edit action; floats above the tab bar.
@@ -251,7 +254,7 @@ Quietly rounded, one dominant radius. Tokens: `--radius` 12px (log buttons, bann
 - **Do** keep every touch target at least 44px, and the main log buttons far larger.
 - **Do** make the next action the largest thing on the screen, using Display figures with tabular numerals.
 - **Do** show status with a tinted background *and* words or an icon.
-- **Do** keep it minimal: words over icons, hairlines over boxes, space over decoration.
+- **Do** keep it minimal: icons only on the tabs and log buttons, hairlines over boxes, space over decoration.
 - **Do** use the CSS variables for every colour, and check the dark and the console night modes after any change.
 - **Do** keep the console to one screen, with no page scroll, at 1180×820.
 - **Do** write neutral, kind copy. An accident is just an accident.
@@ -259,7 +262,7 @@ Quietly rounded, one dominant radius. Tokens: `--radius` 12px (log buttons, bann
 ### Don't
 - **Don't** add a second accent colour, or use the person colours for status.
 - **Don't** put raw colour values outside `:root`.
-- **Don't** add shadows, card fills, glow, emoji icons or coloured side borders.
+- **Don't** add shadows, card fills, glow, emoji or coloured side borders.
 - **Don't** use "bad", "naughty" or "no!" anywhere, or any language that scolds the puppy.
 - **Don't** hide the primary action behind a menu or a multi-step flow. Logging stays one tap.
 

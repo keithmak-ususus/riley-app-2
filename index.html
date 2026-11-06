@@ -87,13 +87,15 @@ header .age { color: var(--muted); font-size: 14px; margin-top: 2px; }
 .group-label { font-size: 13px; color: var(--muted); font-weight: 500; margin: 24px 4px 0; }
 .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
 .act { background: none; border: 1.5px solid var(--line); border-radius: var(--radius); padding: 12px 6px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-weight: 600; font-size: 16px; min-height: 88px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-weight: 600; font-size: 16px; min-height: 80px;
   transition: transform .08s; }
 .act:active { transform: scale(.96); }
-.act .e { display: none; }
+.ic { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.act .e { display: flex; line-height: 0; }
 .act.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .act.primary.soft { background: none; border-color: var(--line); color: var(--ink); }
-.actions.other .act { min-height: 64px; font-size: 15px; font-weight: 500; }
+.actions.other .act { min-height: 64px; padding: 8px 6px; gap: 2px; font-size: 15px; font-weight: 500; }
+.actions.other .act .ic { width: 22px; height: 22px; }
 .sheet { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
 .sheet button { background: var(--alert-bg); color: var(--alert); border-radius: var(--r-ctl-lg); padding: 14px; font-weight: 650; }
 .sheet button.cancel { background: var(--card); color: var(--muted); }
@@ -202,11 +204,12 @@ svg.chart { width: 100%; height: 120px; display: block; }
 
 nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--card);
   border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
-nav.tabs button { flex: 1; background: none; min-height: 56px; padding: 0; font-size: 14px; color: var(--muted); font-weight: 500; position: relative; }
-nav.tabs button .e { display: none; }
+nav.tabs button { flex: 1; background: none; min-height: 60px; padding: 8px 0 6px; font-size: 12px; color: var(--muted); font-weight: 500; position: relative; }
+nav.tabs button .e { display: flex; justify-content: center; line-height: 0; margin-bottom: 3px; }
+nav.tabs button .ic { width: 24px; height: 24px; }
 nav.tabs button.on { color: var(--ink); font-weight: 650; }
 nav.tabs button.on::before { content: ""; position: absolute; top: -1px; left: 30%; right: 30%; height: 2px; background: var(--accent); }
-nav.tabs button.dot::after { content: ""; position: absolute; top: 14px; left: calc(50% + 24px); width: 7px; height: 7px;
+nav.tabs button.dot::after { content: ""; position: absolute; top: 8px; left: calc(50% + 10px); width: 7px; height: 7px;
   border-radius: 50%; background: var(--accent); }
 
 .toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(12px + env(safe-area-inset-top));
@@ -241,7 +244,7 @@ body.console .tile .label, body.console .tile .sub { font-size: 15px; }
 body.console .actions { margin-top: 6px; }
 body.console .actions.other { grid-template-columns: repeat(6, 1fr); }
 body.console .act { min-height: 72px; padding: 8px 6px; gap: 4px; }
-body.console .act .e { font-size: 26px; }
+body.console .act .ic { width: 22px; height: 22px; }
 body.console .group-label { margin-top: 8px; }
 body.console #today h2, body.console #health h2 { margin: 12px 4px 8px; }
 body.console #today .first-h2 { margin-top: 0; }
@@ -279,6 +282,7 @@ body.console #consoleTip { display: block; margin-top: 10px; }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3.5c3.2 4 5.5 6.9 5.5 10a5.5 5.5 0 0 1-11 0c0-3.1 2.3-6 5.5-10z"/></symbol><symbol id="i-mound" viewBox="0 0 24 24"><rect x="4.5" y="14.5" width="15" height="5" rx="2.5"/><rect x="7" y="9.5" width="10" height="5" rx="2.5"/><path d="M12.5 4.5c1.600 1 1.800 2.400.8 3.600"/></symbol><symbol id="i-exit" viewBox="0 0 24 24"><path d="M10 4.5H6.5a1.5 1.5 0 0 0-1.5 1.5v12a1.5 1.5 0 0 0 1.5 1.5H10M14.5 8l4 4-4 4M18.5 12H9.5"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.5 20 18.5H4z"/><path d="M12 10v4M12 16.5v.01"/></symbol><symbol id="i-bowl" viewBox="0 0 24 24"><path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M9 20h6"/><path d="M12 4v3"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M18 6l-1.4 1.4M7.4 16.6 6 18"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M5 9c4 1 10 1 14 0M5 15c4-1 10-1 14 0"/></symbol><symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 4c.6 4.4 2.6 6.4 7 7-4.4.6-6.4 2.6-7 7-.6-4.4-2.6-6.4-7-7 4.4-.6 6.4-2.6 7-7z"/></symbol><symbol id="i-walk" viewBox="0 0 24 24"><circle cx="6.5" cy="17.5" r="2"/><circle cx="17.5" cy="6.5" r="2"/><path d="M8.3 16.5c3-1 1-4.5 3.7-5.5s4 0 4.3-3"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/></symbol><symbol id="i-list" viewBox="0 0 24 24"><path d="M9 7h10M9 12h10M9 17h10"/><path d="M5 7v.01M5 12v.01M5 17v.01"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="m12 4 2.5 5.1 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 19.5S4.5 15 4.5 9.5A4 4 0 0 1 12 7.8 4 4 0 0 1 19.5 9.5C19.5 15 12 19.5 12 19.5z"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M4.5 8h3l1.5-2.5h6L16.5 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></symbol></svg>
 
 <div id="setup" class="hidden">
   <h1>🐾 Riley</h1>
@@ -332,18 +336,18 @@ body.console #consoleTip { display: block; margin-top: 10px; }
       <div id="actions">
         <div class="group-label has-hint">Outside<span class="earlier" id="earlierHint">Hold a button to log earlier</span></div>
         <div class="actions out">
-          <button class="act primary" data-type="wee"><span class="e">💧</span>Wee</button>
-          <button class="act primary" data-type="poo"><span class="e">💩</span>Poo</button>
-          <button class="act primary soft" data-type="out"><span class="e">🚪</span>Nothing</button>
+          <button class="act primary" data-type="wee"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-drop"/></svg></span>Wee</button>
+          <button class="act primary" data-type="poo"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-mound"/></svg></span>Poo</button>
+          <button class="act primary soft" data-type="out"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-exit"/></svg></span>Nothing</button>
         </div>
         <div class="group-label">Indoors</div>
         <div class="actions other">
-          <button class="act" data-type="accident"><span class="e">⚠️</span>Accident</button>
-          <button class="act" data-type="meal"><span class="e">🍽️</span>Meal</button>
-          <button class="act" data-type="nap" id="napBtn"><span class="e">😴</span><span>Nap</span></button>
-          <button class="act" data-type="play"><span class="e">🎾</span>Play</button>
-          <button class="act" data-type="excited"><span class="e">🎉</span>Excited</button>
-          <button class="act" data-type="walk"><span class="e">🦮</span>Walk</button>
+          <button class="act" data-type="accident"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg></span>Accident</button>
+          <button class="act" data-type="meal"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-bowl"/></svg></span>Meal</button>
+          <button class="act" data-type="nap" id="napBtn"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg></span><span>Nap</span></button>
+          <button class="act" data-type="play"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-ball"/></svg></span>Play</button>
+          <button class="act" data-type="excited"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span>Excited</button>
+          <button class="act" data-type="walk"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-walk"/></svg></span>Walk</button>
         </div>
       </div>
       <div class="sheet hidden" id="accSheet">
@@ -534,11 +538,11 @@ body.console #consoleTip { display: block; margin-top: 10px; }
   </main>
 
   <nav class="tabs" id="tabs">
-    <button data-tab="log" class="on"><span class="e">🐾</span>Log</button>
-    <button data-tab="today"><span class="e">📋</span>Today</button>
-    <button data-tab="train"><span class="e">🎓</span>Train</button>
-    <button data-tab="health"><span class="e">💉</span>Health</button>
-    <button data-tab="photos"><span class="e">📸</span>Photos</button>
+    <button data-tab="log" class="on"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></span>Log</button>
+    <button data-tab="today"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg></span>Today</button>
+    <button data-tab="train"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></span>Train</button>
+    <button data-tab="health"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg></span>Health</button>
+    <button data-tab="photos"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg></span>Photos</button>
   </nav>
 </div>
 

@@ -490,7 +490,7 @@ function render() {
   tsl.querySelector(".label").textContent = asleep ? "Asleep for" : "Awake for";
   tsl.querySelector(".big").textContent = ls_ ? ago(now - ls_.at) : "–";
   tsl.querySelector(".sub").textContent = `${ago(sleepToday())} sleep today`;
-  const nb = $("#napBtn"); nb.querySelector(".e").textContent = asleep ? "☀️" : "😴"; nb.lastElementChild.textContent = asleep ? "Woke up" : "Nap";
+  const nb = $("#napBtn"); nb.querySelector("use").setAttribute("href", asleep ? "#i-sun" : "#i-moon"); nb.lastElementChild.textContent = asleep ? "Woke up" : "Nap";
 
   // Nudge (toilet first, then feeding)
   const nudge = $("#nudge"); let msg = "", level = "calm", showRoutine = false;
