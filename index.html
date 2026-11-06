@@ -195,7 +195,7 @@ svg.chart { width: 100%; height: 120px; display: block; }
 
 /* who picker */
 .modal { position: fixed; inset: 0; background: var(--scrim); z-index: 15; display: grid; place-items: center; padding: 20px; }
-.modal .box { background: var(--card); border-radius: var(--r-sheet); padding: 22px; width: min(460px, 100%); border: 1px solid var(--line); }
+.modal .box { background: var(--card); border-radius: var(--r-sheet); padding: 22px; width: min(460px, 100%); max-height: calc(100dvh - 40px); overflow-y: auto; border: 1px solid var(--line); }
 .whenGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 10px; }
 .whenGrid button { background: none; color: var(--ink); border: 1.5px solid var(--line); border-radius: var(--r-ctl-lg); min-height: 56px; font-weight: 600; }
 .whenGrid button[data-min="0"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
@@ -204,6 +204,9 @@ svg.chart { width: 100%; height: 120px; display: block; }
 .timeRow .btn, #whenCancel { min-height: 48px; }
 .efield { display: block; font-size: 13px; color: var(--muted); font-weight: 600; margin: 12px 0; }
 .efield input { margin-top: 4px; min-height: 48px; }
+.pickrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 4px; }
+.pickrow button { background: none; border: 1.5px solid var(--line); border-radius: var(--r-pill); padding: 0 14px; min-height: 44px; font-weight: 500; }
+.pickrow button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); font-weight: 600; }
 .editErr { color: var(--alert); font-size: 14px; margin: 0 0 10px; }
 .earlier { margin-left: auto; font-weight: 600; color: var(--accent-text); }
 .group-label.has-hint { display: flex; align-items: center; }
@@ -589,6 +592,12 @@ body.console #consoleTip { display: block; margin-top: 10px; }
     <h3 id="editTitle">Edit entry</h3>
     <label class="efield">Time<input type="time" id="editTime"></label>
     <label class="efield hidden" id="editGramsWrap">Grams<input type="number" id="editGrams" inputmode="numeric" min="0" max="1999"></label>
+    <div class="hidden" id="editPoo">
+      <div class="efield">Shape (optional)<div class="pickrow" id="editShape"></div></div>
+      <div class="efield">Colour (optional)<div class="pickrow" id="editColour"></div></div>
+      <label class="efield">Note (optional)<input id="editNote" maxlength="140" placeholder="e.g. after a new treat"></label>
+      <p class="muted" style="font-size:13px;margin:0 0 10px">Handy for the vet. If something looks unusual or you're unsure, ask your vet.</p>
+    </div>
     <p class="editErr hidden" id="editErr" role="alert"></p>
     <div class="timeRow">
       <button class="btn ghost" id="editCancel">Cancel</button>
