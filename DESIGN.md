@@ -4,14 +4,19 @@ description: A warm, big-target household noticeboard for a new puppy, glanceabl
 colors:
   cream: "#FBF7F1"
   card-white: "#FFFFFF"
+  cream-dark: "#1A1714"
+  card-dark: "#26211D"
+  ink-dark: "#F2EBE3"
+  night-bg: "#0F0D0B"
   ink: "#2A2420"
   muted: "#7A6F66"
   line: "#E9E1D7"
-  terracotta: "#C2603C"
+  terracotta: "#B5532F"
+  terracotta-on-dark: "#D9774F"
   terracotta-ink: "#FFFFFF"
-  ok: "#3C7D5A"
+  ok: "#36714F"
   ok-bg: "#E7F2EB"
-  warn: "#9A6412"
+  warn: "#8F5C10"
   warn-bg: "#FBEFD9"
   alert: "#B83A2E"
   alert-bg: "#FBE4E1"
@@ -42,6 +47,35 @@ typography:
     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'Segoe UI', Roboto, sans-serif"
     fontSize: "13px"
     fontWeight: 600
+  figure:
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'Segoe UI', Roboto, sans-serif"
+    fontSize: "42px"
+    fontWeight: 750
+    letterSpacing: "-0.02em"
+  clock:
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'Segoe UI', Roboto, sans-serif"
+    fontSize: "40px"
+    fontWeight: 700
+  title-lg:
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'Segoe UI', Roboto, sans-serif"
+    fontSize: "20px"
+    fontWeight: 700
+  body-md:
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'Segoe UI', Roboto, sans-serif"
+    fontSize: "15px"
+    fontWeight: 600
+  body-sm:
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'Segoe UI', Roboto, sans-serif"
+    fontSize: "14px"
+    fontWeight: 400
+  caption:
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'Segoe UI', Roboto, sans-serif"
+    fontSize: "12px"
+    fontWeight: 600
+  micro:
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'Segoe UI', Roboto, sans-serif"
+    fontSize: "11px"
+    fontWeight: 600
   mono:
     fontFamily: "ui-monospace, Menlo, monospace"
     fontSize: "14px"
@@ -52,6 +86,9 @@ rounded:
   card: "18px"
   button-sm: "12px"
   tag: "10px"
+  level: "8px"
+  bar: "6px"
+  pip: "5px"
 spacing:
   tight: "6px"
   gap: "10px"
@@ -114,7 +151,8 @@ Density is low and the hit targets are large. Colour is warm cream and a single 
 A warm cream and white base with one terracotta accent. Green, amber and red mean status only. Blue and magenta mean *people* only.
 
 ### Primary
-- **Terracotta** (#C2603C, night #A8512F): the primary log buttons, the active tab, links and the "do" coach tips. It is the only accent. The primary log buttons carry white text on it.
+- **Terracotta** (#B5532F; night fill #A8512F): the fill of the primary log buttons, the "To do" tag and the unread dot. It is the only accent. White text on it is 4.95:1.
+- **Terracotta text** (`--accent-text`: #B5532F on light, #D9774F on dark, #C96A42 at night): the active tab, links and small accent text. Kept separate from the fill so dark mode can lighten text without weakening the buttons.
 
 ### Neutral
 - **Cream** (#FBF7F1; dark #1A1714; night #0F0D0B): the page background.
@@ -124,8 +162,8 @@ A warm cream and white base with one terracotta accent. Green, amber and red mea
 - **Line** (#E9E1D7; dark #3A332D; night #2C2621): row dividers, input borders, empty meal pips.
 
 ### Status (each is a text colour on its own tinted background)
-- **OK green** (#3C7D5A on #E7F2EB): on track, done, accident-free.
-- **Warn amber** (#9A6412 on #FBEFD9): a trip is nearly due, a meal count is off.
+- **OK green** (#36714F on #E7F2EB): on track, done, accident-free.
+- **Warn amber** (#8F5C10 on #FBEFD9): a trip is nearly due, a meal count is off.
 - **Alert red** (#B83A2E on #FBE4E1): a trip is due or late, an accident, an error.
 
 ### People
@@ -160,6 +198,8 @@ Single column on phones (under 700px) with a fixed five-tab bar (Log, Today, Tra
 
 The **console** (iPad landscape, 1180×820) is one screen with **no page scroll**: a two-column grid (1.25fr / 1fr, 28px gap) holding Log, Today, Coming up and the top coach tip. Figures grow (tile figure 42px) and the indoor log buttons become one row of six. Long lists scroll inside their own box (timeline about 27vh, upcoming about 20vh) so the page itself never does. From 22:00 to 06:00 it switches to the night palette.
 
+**Today (phone)** reads in the order people need it: counts, the timeline, then suggestions (one shown, the rest behind a "+n more" row), then food.
+
 Spacing rhythm is tight and consistent: 6px between pips, 10px between tiles and buttons, 14–16px card padding, 16px page gutter (28px on the console).
 
 ## Elevation & Depth
@@ -193,7 +233,7 @@ Rounded and friendly, with one dominant radius. Tokens: `--radius` 18px, `--r-ct
 - **Style:** a full-width tinted banner, 17px bold. Calm = green, warn = amber, alert = red. On the console it grows to 20px.
 
 ### Coach tip
-- **Style:** white card with a 5px left edge: terracotta = do, amber = soon, green = info. A title, a short body, and a muted source credit.
+- **Style:** white card with a title, a small level tag beside the title (solid terracotta "To do", amber "Soon", green "Good to know"), a short body and a muted source credit. No coloured side border. Actions and "Not now" are at least 44px.
 
 ### Chip and tag
 - **Style:** pill, white with card lift for counts; tags are small tinted status pills (over, soon, ok).
@@ -223,12 +263,9 @@ Rounded and friendly, with one dominant radius. Tokens: `--radius` 18px, `--r-ct
 ### Don't
 - **Don't** add a second accent colour, or use the person colours for status.
 - **Don't** put raw colour values outside `:root`.
-- **Don't** use shadows as borders or add glow.
+- **Don't** use shadows as borders, add glow, or mark cards with a coloured side border.
 - **Don't** use "bad", "naughty" or "no!" anywhere, or any language that scolds the puppy.
 - **Don't** hide the primary action behind a menu or a multi-step flow. Logging stays one tap.
 
-### Known gaps (measured contrast, to fix in the design pass)
-- White text on terracotta is **4.17:1** (light and dark): below AA for 15px bold text. In the night palette it passes (5.41:1).
-- The active tab label and links (terracotta on cream) are **3.91:1** at 12px: below AA.
-- OK green on its tint is **4.28:1** and warn amber on its tint is **4.39:1**: just below AA in light mode.
-- In dark mode, terracotta *text* on dark surfaces (the active tab, links, "Later" actions) is only **3.8–4.3:1**, because the accent isn't brightened for dark. The detector flags it.
+### Contrast status
+As of the design pass every text pair measures at least 4.5:1 in light, dark and night, and the detector reports no low-contrast findings. Re-measure after any colour change. Keep the accent *fill* (white text) and the accent *text* colour separate.

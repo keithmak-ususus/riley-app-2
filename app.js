@@ -401,7 +401,8 @@ function tipCard(s, compact = false) {
   const el = document.createElement("div");
   el.className = "tip " + s.level;
   const src = s.source?.url ? `<a href="${esc(s.source.url)}" target="_blank" rel="noopener">${esc(s.source.name)}</a>` : esc(s.source?.name || "");
-  el.innerHTML = `<h3>${esc(s.title)}</h3><p>${esc(s.body)}</p>` + (compact ? "" :
+  const LEVEL = { do: "To do", soon: "Soon", info: "Good to know" };
+  el.innerHTML = `<div class="tiptitle"><h3>${esc(s.title)}</h3><span class="tag ${esc(s.level)}">${LEVEL[s.level] || ""}</span></div><p>${esc(s.body)}</p>` + (compact ? "" :
     `<div class="foot"><span class="src">${src}</span>
       ${s.action ? `<button class="btn small act-btn">${esc(s.action.label)}</button>` : ""}
       <button class="later">${s.level === "info" ? "Got it" : "Not now"}</button></div>`);
@@ -417,11 +418,18 @@ function tipCard(s, compact = false) {
 }
 const dismiss = (id, days) => store.setDoc("settings", "main", { dismissed: { [id]: Date.now() + days * DAY } });
 
+let coachOpen = false;  // Today shows one suggestion; the rest are one tap away
 function renderCoach() {
   const all = suggestions();
   const todayList = all.filter((s) => s.area !== "training"), trainList = all.filter((s) => s.area === "training");
   const ct = $("#coachToday"); ct.innerHTML = "";
-  todayList.forEach((s) => ct.append(tipCard(s)));
+  (coachOpen ? todayList : todayList.slice(0, 1)).forEach((s) => ct.append(tipCard(s)));
+  if (todayList.length > 1) {
+    const more = document.createElement("button"); more.className = "btn ghost more";
+    more.textContent = coachOpen ? "Show fewer" : `+${todayList.length - 1} more suggestion${todayList.length > 2 ? "s" : ""}`;
+    more.onclick = () => { coachOpen = !coachOpen; renderCoach(); };
+    ct.append(more);
+  }
   $("#coachTodayWrap").classList.toggle("hidden", !todayList.length);
   const tr = $("#coachTrain"); tr.innerHTML = "";
   if (!trainList.length) tr.innerHTML = `<div class="card muted">Nothing new – keep practising little and often.</div>`;
@@ -622,7 +630,7 @@ function renderHealth() {
       </div>
       <div class="muted" style="font-size:14px">${l ? `Last: ${fmtDay(l.at)}${l.product ? " · " + esc(l.product) : ""} · ${esc(l.by || "")}` : "Ask the breeder when he was last treated, and log it here."} · every ${gap} days</div>
       <div class="form"><div class="three">
-        <input type="date" class="t-date" value="${dayKey(Date.now())}">
+        <input type="date" class="t-date" aria-label="Date given" value="${dayKey(Date.now())}">
         <input class="t-prod" placeholder="Product" value="${esc(l?.product || "")}">
         <button class="btn small t-log">Log</button>
       </div></div>
