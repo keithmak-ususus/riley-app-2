@@ -22,7 +22,7 @@ A shared puppy log for the household. The iPad shows a live console, and the pho
 5. **Project settings (⚙️) → Your apps → Web (</>)**: register an app called `riley`, then copy the `firebaseConfig` values into `config.js`.
 6. **Owners:** the first Google account to open a household claims it. Then add your partner's Google email in ⚙️ Settings → Owners, and they can sign in. The rules only let verified Google accounts on that list in, so a leaked household code or join link is not enough.
 
-**Upgrading from the anonymous-sign-in version:** publish the new `firestore.rules` only *after* you've signed in with Google on your own devices. Once it's published, devices still on the old anonymous sign-in lose access until their owner signs in with Google. The data itself stays where it is.
+**Upgrading from the anonymous-sign-in version:** publish the new `firestore.rules` **first** (Firebase console → Firestore → Rules → paste the file → Publish), *then* open the app and sign in with Google. The sign-in has to write your owner record, and the old rules don't allow that, so signing in before publishing shows "isn't an owner". Once the rules are published, devices still on the old anonymous sign-in lose access until their owner signs in with Google; the data itself stays where it is. The first Google account to sign in claims the household, so do your own sign-in straight after publishing.
 
 **Testing the rules:** `cd tests/rules && npm install && npm test` (needs Java for the Firebase emulator). Run it after any change to `firestore.rules`.
 
