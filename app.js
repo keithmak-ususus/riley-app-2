@@ -1,7 +1,7 @@
-import { openStore, DEMO } from "./store.js";
-import { defaults } from "./config.js";
-import { coach, NAME_LEVELS, SOCIAL_ITEMS } from "./coach.js";
-import { compressPhoto } from "./photos.js";
+import { openStore, DEMO } from "./store.js?v=de930afa";
+import { defaults } from "./config.js?v=de930afa";
+import { coach, NAME_LEVELS, SOCIAL_ITEMS } from "./coach.js?v=de930afa";
+import { compressPhoto } from "./photos.js?v=de930afa";
 
 const $ = (s) => document.querySelector(s);
 const ls = { get: (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
