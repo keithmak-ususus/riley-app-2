@@ -56,7 +56,7 @@ function showSignIn(problem) {
   $("#app").classList.add("hidden"); $("#signin").classList.remove("hidden");
   const err = $("#signinErr"), email = store.user()?.email;
   err.classList.toggle("hidden", !problem);
-  if (problem === "denied") err.textContent = `${email || "This Google account"} isn't an owner of this household. Ask the other owner to add your email in Settings, or sign in with a different account.`;
+  if (problem === "denied") err.textContent = `${email || "This Google account"} couldn't be set up as an owner. Either it isn't on the owners list (ask the other owner to add your email in Settings, or sign in with a different account), or the new Firestore rules haven't been published yet (see the README).`;
   else if (problem && problem !== "denied") err.textContent = problem;
   $("#googleBtn").textContent = email ? "Sign in with a different Google account" : "Sign in with Google";
   $("#googleBtn").onclick = async () => {
