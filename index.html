@@ -17,7 +17,7 @@
   --bg: #FFFFFF; --card: #FFFFFF; --ink: #2A2420; --muted: #7A6F66; --line: #E8E4DF;
   --accent: #B5532F; --accent-text: #B5532F; --accent-ink: #FFFFFF; --ok: #36714F; --ok-bg: #E7F2EB;  /* accent = fills, accent-text = text on the page */
   --warn: #8F5C10; --warn-bg: #FBEFD9; --alert: #B83A2E; --alert-bg: #FBE4E1;
-  --p1: #2F6DB5; --p2: #A8457A;   /* the two household members */
+  --p1: #2F6DB5; --p2: #A8457A; --p3: #6B5E52;   /* the two household members, and a sitter */
   --radius: 12px; --shadow: none;
   --r-ctl: 10px; --r-ctl-lg: 12px; --r-sm: 8px; --r-sheet: 16px; --r-pill: 999px;  /* control, large control, small, modal, pill */
   --hdr: color-mix(in srgb, var(--accent) 8%, var(--bg));   /* header band */
@@ -32,13 +32,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not(.light) { --bg:#1A1714; --card:#26211D; --ink:#F2EBE3; --muted:#A99D92; --line:#3A332D;
     --ok-bg:#1F3328; --warn-bg:#3A2D17; --alert-bg:#3D211D; --ok:#7CC49A; --warn:#E5B567; --alert:#F08A7E;
-    --accent-text:#D9774F; --p1:#6FA3E0; --p2:#E08AB8;
+    --accent-text:#D9774F; --p1:#6FA3E0; --p2:#E08AB8; --p3:#9C8E80;
     --nav-bg:#2E2823; --nav-fg:#C7BDB3;
     --c-wee:#4FC3D6; --c-poo:#C99063; --c-acc:#F08A7E; --c-meal:#F0A04B; --c-nap:#9A9AF0; --c-play:#7CC49A; --c-exc:#E0B94A; --c-walk:#B79AE0; }
 }
 :root.night { --bg:#0F0D0B; --card:#1A1714; --ink:#D9CFC4; --muted:#8C8076; --line:#2C2621;
   --ok-bg:#16241C; --warn-bg:#2B2112; --alert-bg:#2E1814; --ok:#6BAF88; --warn:#D4A55A; --alert:#E07A6E; --accent:#A8512F;
-  --accent-text:#C96A42; --p1:#5B8CC4; --p2:#C47AA2;
+  --accent-text:#C96A42; --p1:#5B8CC4; --p2:#C47AA2; --p3:#8C7F72;
   --nav-bg:#1A1714; --nav-fg:#A99D92;
   --c-wee:#43AEC0; --c-poo:#B58058; --c-acc:#E07A6E; --c-meal:#D98B3E; --c-nap:#8888DC; --c-play:#6BAF88; --c-exc:#C9A53F; --c-walk:#A488CC; }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -245,11 +245,13 @@ nav.tabs button.dot::after { content: ""; position: absolute; top: 8px; left: ca
 .toast .tq-chips button:active { background: var(--bg); color: var(--ink); }
 .toast button { background: none; color: var(--accent); font-weight: 700; filter: brightness(1.4); flex: none; }
 
-#setup, #signin { max-width: 440px; margin: 10vh auto 0; }
-#setup h1, #signin h1 { font-size: 36px; margin: 0 0 6px; }
-#setup p, #signin p { color: var(--muted); }
+#setup, #signin, #sitterGate { max-width: 440px; margin: 10vh auto 0; padding: 0 4px; }
+#setup h1, #signin h1, #sitterGate h1 { font-size: 36px; margin: 0 0 6px; }
+#setup p, #signin p, #sitterGate p { color: var(--muted); }
 #signin .btn { min-height: 52px; margin-top: 10px; }
-#signin .err { color: var(--alert); }
+#signin .err, #sitterGate .err { color: var(--alert); }
+#sitterGate input { font-size: 28px; letter-spacing: .3em; text-align: center; min-height: 60px; }
+#sitterGate .btn { min-height: 52px; margin-top: 10px; }
 
 /* ---------- iPad console ---------- */
 body.console { padding: max(12px, env(safe-area-inset-top)) 28px 12px; }
@@ -311,6 +313,25 @@ body.display #timeline { max-height: 36vh; }
 body.display .viewback#displayToggle { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 #consoleTip { display: none; }
 body.console #consoleTip { display: block; margin-top: 10px; }
+/* ---------- Sitters ---------- */
+.sitterbar { margin: 10px 0 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); font-size: 14px; color: var(--muted); }
+.sitterbar b { color: var(--ink); }
+.guidetab { display: none; }
+body.sitter .guidetab { display: block; }
+body.sitter nav.tabs button[data-tab="train"], body.sitter nav.tabs button[data-tab="health"], body.sitter nav.tabs button[data-tab="photos"],
+body.sitter #gear, body.sitter #viewToggle, body.sitter #coachTodayWrap, body.sitter #foodCard, body.sitter .photo-nudge, body.sitter #consoleTip,
+body.sitter #displayToggle, body.sitter #phoneView { display: none !important; }
+body:not(.sitter) .sitter-only, body.sitter .owner-only { display: none !important; }
+.srow { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-top: 1px solid var(--line); }
+.srow:first-child { border-top: 1px solid var(--line); }
+.srow .what { flex: 1; min-width: 0; font-weight: 600; }
+.srow .what small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; }
+.srow button { background: none; border: 1.5px solid var(--line); border-radius: var(--r-ctl); min-height: 44px; padding: 0 12px; font-weight: 600; font-size: 14px; flex: none; }
+.srow button.danger { color: var(--alert); }
+.pinshow { font-size: 40px; font-weight: 700; letter-spacing: .25em; text-align: center; font-variant-numeric: tabular-nums; margin: 14px 0; }
+#invLink { font-size: 13px; }
+.modal .people button.sitterbtn { background: var(--p3); }
+.modal .people button:last-child:nth-child(odd) { grid-column: 1 / -1; }
 /* ---------- Sitter guide ---------- */
 #guide .guide-actions { display: flex; gap: 10px; margin: 6px 0 4px; }
 #guide .guide-actions .btn { min-height: 44px; padding: 10px 16px; }
@@ -336,7 +357,7 @@ body.console #consoleTip { display: block; margin-top: 10px; }
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3.5c3.2 4 5.5 6.9 5.5 10a5.5 5.5 0 0 1-11 0c0-3.1 2.3-6 5.5-10z"/></symbol><symbol id="i-mound" viewBox="0 0 24 24"><rect x="4.5" y="14.5" width="15" height="5" rx="2.5"/><rect x="7" y="9.5" width="10" height="5" rx="2.5"/><path d="M12.5 4.5c1.600 1 1.800 2.400.8 3.600"/></symbol><symbol id="i-exit" viewBox="0 0 24 24"><path d="M10 4.5H6.5a1.5 1.5 0 0 0-1.5 1.5v12a1.5 1.5 0 0 0 1.5 1.5H10M14.5 8l4 4-4 4M18.5 12H9.5"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.5 20 18.5H4z"/><path d="M12 10v4M12 16.5v.01"/></symbol><symbol id="i-bowl" viewBox="0 0 24 24"><path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M9 20h6"/><path d="M12 4v3"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M18 6l-1.4 1.4M7.4 16.6 6 18"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M5 9c4 1 10 1 14 0M5 15c4-1 10-1 14 0"/></symbol><symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 4c.6 4.4 2.6 6.4 7 7-4.4.6-6.4 2.6-7 7-.6-4.4-2.6-6.4-7-7 4.4-.6 6.4-2.6 7-7z"/></symbol><symbol id="i-walk" viewBox="0 0 24 24"><circle cx="6.5" cy="17.5" r="2"/><circle cx="17.5" cy="6.5" r="2"/><path d="M8.3 16.5c3-1 1-4.5 3.7-5.5s4 0 4.3-3"/></symbol><symbol id="i-paw" viewBox="0 0 24 24"><circle cx="6.5" cy="11" r="1.7"/><circle cx="10" cy="6.8" r="1.7"/><circle cx="14" cy="6.8" r="1.7"/><circle cx="17.5" cy="11" r="1.7"/><path d="M12 12.2c-2.8 0-5 2.7-5 5 0 1.6 1.4 2 2.8 1.6.7-.2 1.5-.4 2.2-.4s1.5.2 2.2.4c1.4.4 2.8 0 2.8-1.600 0-2.300-2.200-5-5-5z"/></symbol><symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M19 7h1M4 12h3M13 12h7M4 17h11M21 17h-1"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="12" r="2.2"/><circle cx="18" cy="17" r="2.2"/></symbol><symbol id="i-photo" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10.5" r="1.5"/><path d="m4 17 5-4.5 3.5 3 3-2.5L20 16"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2.2"/><path d="M11 18h2"/></symbol><symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/></symbol><symbol id="i-list" viewBox="0 0 24 24"><path d="M9 7h10M9 12h10M9 17h10"/><path d="M5 7v.01M5 12v.01M5 17v.01"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="m12 4 2.5 5.1 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 19.5S4.5 15 4.5 9.5A4 4 0 0 1 12 7.8 4 4 0 0 1 19.5 9.5C19.5 15 12 19.5 12 19.5z"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M4.5 8h3l1.5-2.5h6L16.5 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></symbol></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3.5c3.2 4 5.5 6.9 5.5 10a5.5 5.5 0 0 1-11 0c0-3.1 2.3-6 5.5-10z"/></symbol><symbol id="i-mound" viewBox="0 0 24 24"><rect x="4.5" y="14.5" width="15" height="5" rx="2.5"/><rect x="7" y="9.5" width="10" height="5" rx="2.5"/><path d="M12.5 4.5c1.600 1 1.800 2.400.8 3.600"/></symbol><symbol id="i-exit" viewBox="0 0 24 24"><path d="M10 4.5H6.5a1.5 1.5 0 0 0-1.5 1.5v12a1.5 1.5 0 0 0 1.5 1.5H10M14.5 8l4 4-4 4M18.5 12H9.5"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.5 20 18.5H4z"/><path d="M12 10v4M12 16.5v.01"/></symbol><symbol id="i-bowl" viewBox="0 0 24 24"><path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M9 20h6"/><path d="M12 4v3"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M18 6l-1.4 1.4M7.4 16.6 6 18"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M5 9c4 1 10 1 14 0M5 15c4-1 10-1 14 0"/></symbol><symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 4c.6 4.4 2.6 6.4 7 7-4.4.6-6.4 2.6-7 7-.6-4.4-2.6-6.4-7-7 4.4-.6 6.4-2.6 7-7z"/></symbol><symbol id="i-walk" viewBox="0 0 24 24"><circle cx="6.5" cy="17.5" r="2"/><circle cx="17.5" cy="6.5" r="2"/><path d="M8.3 16.5c3-1 1-4.5 3.7-5.5s4 0 4.3-3"/></symbol><symbol id="i-paw" viewBox="0 0 24 24"><circle cx="6.5" cy="11" r="1.7"/><circle cx="10" cy="6.8" r="1.7"/><circle cx="14" cy="6.8" r="1.7"/><circle cx="17.5" cy="11" r="1.7"/><path d="M12 12.2c-2.8 0-5 2.7-5 5 0 1.6 1.4 2 2.8 1.6.7-.2 1.5-.4 2.2-.4s1.5.2 2.2.4c1.4.4 2.8 0 2.8-1.600 0-2.300-2.200-5-5-5z"/></symbol><symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M19 7h1M4 12h3M13 12h7M4 17h11M21 17h-1"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="12" r="2.2"/><circle cx="18" cy="17" r="2.2"/></symbol><symbol id="i-photo" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10.5" r="1.5"/><path d="m4 17 5-4.5 3.5 3 3-2.5L20 16"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M5 5.5A1.5 1.5 0 0 1 6.5 4H19v14H6.5A1.5 1.5 0 0 0 5 19.500zM5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2.2"/><path d="M11 18h2"/></symbol><symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/></symbol><symbol id="i-list" viewBox="0 0 24 24"><path d="M9 7h10M9 12h10M9 17h10"/><path d="M5 7v.01M5 12v.01M5 17v.01"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="m12 4 2.5 5.1 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 19.5S4.5 15 4.5 9.5A4 4 0 0 1 12 7.8 4 4 0 0 1 19.5 9.5C19.5 15 12 19.5 12 19.5z"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M4.5 8h3l1.5-2.5h6L16.5 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></symbol></svg>
 
 <div id="setup" class="hidden">
   <h1>🐾 Riley</h1>
@@ -357,6 +378,15 @@ body.console #consoleTip { display: block; margin-top: 10px; }
   <button class="btn ghost" id="signinLeave" style="width:100%">Use a different household</button>
 </div>
 
+<div id="sitterGate" class="hidden">
+  <h1>🐾 Hello</h1>
+  <p id="sitterMsg">Enter the 6-digit PIN you were given to open the app.</p>
+  <div class="field" id="pinWrap"><label for="pinInput">PIN</label><input id="pinInput" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" placeholder="6 digits"></div>
+  <button class="btn" id="pinGo" style="width:100%">Continue</button>
+  <p class="err" id="pinErr" role="alert"></p>
+  <button class="btn ghost" id="sitterLeave" style="width:100%">This isn't for me</button>
+</div>
+
 <div id="app" class="hidden">
   <header>
     <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" class="avatar hidden" id="hdrPhoto" alt="">
@@ -368,6 +398,7 @@ body.console #consoleTip { display: block; margin-top: 10px; }
     <button class="iconbtn tab-only" id="viewToggle" title="Switch to console view" aria-label="Switch to console view"><svg class="ic"><use href="#i-monitor"/></svg></button>
     <button class="iconbtn tab-only" id="gear" title="Settings" aria-label="Settings"><svg class="ic"><use href="#i-sliders"/></svg></button>
   </header>
+  <div class="sitterbar hidden" id="sitterBar"></div>
   <div class="demo hidden" id="demoNote">Demo mode: add your Firebase config to sync between devices.</div>
 
   <main>
@@ -554,6 +585,20 @@ body.console #consoleTip { display: block; margin-top: 10px; }
         <div class="two form" style="margin:0"><input id="sOwn1" type="email" placeholder="Your Google email" autocapitalize="off"><input id="sOwn2" type="email" placeholder="Partner's Google email" autocapitalize="off"></div></div>
       <button class="btn ghost" id="shareLink" style="width:100%;margin-bottom:12px">Share join link</button>
       <button class="btn ghost hidden" id="signOutBtn" style="width:100%;margin-bottom:12px">Sign out of Google</button>
+      <div class="owner-only">
+        <h2>Sitters</h2>
+        <p class="muted" style="font-size:13px;margin:0 0 8px">Give a sitter a link and a PIN (tell them the PIN separately). They can log and see today and the guide for the dates you choose. They can't see health, photos or settings.</p>
+        <div class="list" id="sitterList"></div>
+        <div class="form" style="margin-top:12px">
+          <input id="invName" placeholder="Sitter's name" maxlength="40" autocomplete="off" aria-label="Sitter's name">
+          <div class="two">
+            <label class="efield" style="margin:0">From<input type="date" id="invFrom"></label>
+            <label class="efield" style="margin:0">Until (end of day)<input type="date" id="invTo"></label>
+          </div>
+          <p class="editErr hidden" id="invErr" role="alert"></p>
+          <button class="btn" id="invCreate">Create invite</button>
+        </div>
+      </div>
       <h2>Puppy</h2>
       <div class="field"><label for="sDog">Name</label><input id="sDog"></div>
       <div class="two form" style="margin:0 0 12px">
@@ -605,8 +650,23 @@ body.console #consoleTip { display: block; margin-top: 10px; }
     <button data-tab="today"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg></span>Today</button>
     <button data-tab="train"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></span>Train</button>
     <button data-tab="health"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg></span>Health</button>
+    <button data-tab="guide" class="guidetab"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-book"/></svg></span>Guide</button>
     <button data-tab="photos"><span class="e"><svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg></span>Photos</button>
   </nav>
+</div>
+
+<div class="modal hidden" id="inviteModal" role="dialog" aria-label="Sitter invite">
+  <div class="box">
+    <h3 id="invTitle">Invite</h3>
+    <p class="muted" style="font-size:14px;margin:0 0 6px">Send this link, then tell them the PIN another way (a call or a different message).</p>
+    <input id="invLink" readonly aria-label="Invite link">
+    <div class="pinshow" id="invPin" aria-label="PIN"></div>
+    <div class="timeRow">
+      <button class="btn ghost" id="invShare">Share link</button>
+      <button class="btn ghost" id="invCopyPin">Copy PIN</button>
+    </div>
+    <button class="btn" id="invDone" style="width:100%;min-height:48px">Done</button>
+  </div>
 </div>
 
 <div class="modal hidden" id="whoModal" role="dialog" aria-label="Who is logging?">
@@ -665,6 +725,6 @@ body.console #consoleTip { display: block; margin-top: 10px; }
   </div>
 </div>
 
-<script type="module" src="app.js?v=de930afa"></script>
+<script type="module" src="app.js?v=28e323ce"></script>
 </body>
 </html>
