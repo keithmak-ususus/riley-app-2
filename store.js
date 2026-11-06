@@ -1,6 +1,6 @@
 // Tiny data layer: Firebase Firestore when configured, otherwise a local demo store.
 // Collections live under households/<code>/<collection>.
-import { firebaseConfig } from "./config.js?v=f6cecbb5";
+import { firebaseConfig } from "./config.js?v=c30f1589";
 
 export const DEMO = !firebaseConfig.apiKey || firebaseConfig.apiKey === "PASTE_ME";
 

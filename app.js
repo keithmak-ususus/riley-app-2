@@ -1,7 +1,8 @@
-import { openStore, DEMO } from "./store.js?v=f6cecbb5";
-import { defaults } from "./config.js?v=f6cecbb5";
-import { coach, NAME_LEVELS, SOCIAL_ITEMS } from "./coach.js?v=f6cecbb5";
-import { compressPhoto } from "./photos.js?v=f6cecbb5";
+import { openStore, DEMO } from "./store.js?v=c30f1589";
+import { defaults } from "./config.js?v=c30f1589";
+import { coach, NAME_LEVELS, SOCIAL_ITEMS } from "./coach.js?v=c30f1589";
+import { compressPhoto } from "./photos.js?v=c30f1589";
+import { nextTrip as planTrip, OUT_TYPES, AFTER_MEAL, AFTER_PLAY, RETRY_AFTER_NOTHING } from "./planner.js?v=c30f1589";
 
 const $ = (s) => document.querySelector(s);
 const ls = { get: (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
@@ -19,7 +20,6 @@ const isPoo = (t) => t === "poo" || t === "acc_poo";
 const pooDetail = (e) => [SHAPES[e.shape], COLOURS[e.colour], e.note].filter(Boolean).join(" · ");
 const EMOJI = { wee: "💧", poo: "💩", out: "🚪", acc_wee: "⚠️", acc_poo: "⚠️", meal: "🍽️", play: "🎾", excited: "🎉",
   sleep: "😴", wake: "☀️", walk: "🦮" };
-const OUT_TYPES = ["wee", "poo", "out", "walk"];  // anything that counts as a trip outside
 const TREAT = { worming: "Worming", flea: "Flea & tick" };
 
 let store, events = [], health = [], weights = [], treatments = [], training = [], photos = [], shared = { ...defaults };
@@ -535,35 +535,15 @@ function sleepToday() {
 }
 
 // ---------- toilet-trip planner (rules from Riley's puppy plan – see GUIDELINES.md) ----------
-const RETRY_AFTER_NOTHING = 15 * MIN;  // "If he doesn't go within 5 min, back inside, supervise, retry after 10–15 min"
-const AFTER_MEAL = 15 * MIN;           // out after eating
-const AFTER_PLAY = 10 * MIN;           // out after play / training / visitors / excitement
 const OUT_WORD = { wee: "wee", poo: "poo", out: "nothing", walk: "walk" };
 
 function bedtimeToday() {
   const [hh, mm] = String(shared.bedtime || "22:00").split(":").map(Number);
   const d = new Date(); d.setHours(hh || 22, mm || 0, 0, 0); return d.getTime();
 }
-function nextTrip(lo, now) {
-  const name = shared.dogName || "Riley";
-  const interval = (shared.weeIntervalMin || 60) * MIN;
-  const since = (ev) => ev && (!lo || lo.at < ev.at);
-  const cands = [];
-  const acc = last("acc_wee", "acc_poo"), wk = last("sleep", "wake"), ml = last("meal"), pl = last("play", "excited");
-  if (since(acc)) cands.push({ due: acc.at, short: "after accident",
-    msg: `Accident – take ${name} out to finish. Clean with enzymatic cleaner, no telling off` });
-  if (wk?.type === "wake" && since(wk)) cands.push({ due: wk.at, short: "just woke", msg: `Just woke up – take ${name} out now` });
-  if (since(ml)) cands.push({ due: ml.at + AFTER_MEAL, short: "after eating", msg: `Ate at ${hm(ml.at)} – time to go out` });
-  if (since(pl)) cands.push({ due: pl.at + AFTER_PLAY, short: pl.type === "play" ? "after play" : "after excitement",
-    msg: `${pl.type === "play" ? "Play/training" : "Excitement"} at ${hm(pl.at)} – time to go out` });
-  if (lo?.type === "out") cands.push({ due: lo.at + RETRY_AFTER_NOTHING, short: "try again",
-    msg: `Nothing at ${hm(lo.at)} – try again now (sooner if sniffing, circling or panting)` });
-  else if (lo) cands.push({ due: lo.at + interval, short: "hourly", msg: `Hourly trip – last out ${ago(now - lo.at)} ago` });
-  const bed = bedtimeToday();
-  if (now >= bed - 30 * MIN && now < bed + 3 * 3600e3 && (!lo || lo.at < bed - 45 * MIN))
-    cands.push({ due: bed - 30 * MIN, short: "before bed", msg: `Last trip out before bed` });
-  return cands.sort((a, b) => a.due - b.due)[0] || null;
-}
+// The rules live in planner.js (shared with the scheduled reminder sender); this just feeds it the current state.
+const nextTrip = (lo, now) => planTrip(lo, { events, name: shared.dogName || "Riley", intervalMin: shared.weeIntervalMin,
+  bedMs: bedtimeToday(), now, fmt: { hm, ago } });
 
 // ---------- coach ----------
 function suggestions() {
