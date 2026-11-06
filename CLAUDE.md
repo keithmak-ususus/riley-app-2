@@ -47,6 +47,7 @@ There are exactly two household `members`. Every record stores `by`. Phones log 
 
 ## How we work
 - **Work comes from GitHub Issues.** Before starting, read the issue with `gh issue view <n>`. Restate the acceptance criteria and plan before editing. Keep each change to one issue.
+- **Cache-busting:** GitHub Pages lets browsers reuse files for 10 minutes, so a device can load a new `index.html` with an old `app.js` (buttons that do nothing, old behaviour). Run `scripts/stamp-version.sh` after changing `app.js`, `store.js`, `coach.js`, `photos.js` or `config.js`, and commit the result. `scripts/stamp-version.sh --check` verifies it.
 - **Commits** reference the issue (`Fixes #12: …`). Only push to `main` when the user says so, because GitHub Pages deploys from `main`.
 - **Check your work before saying it's done:** run `python3 -m http.server 8000` and open `localhost:8000` in demo mode. Check the phone (390×844) and console (1180×820) views, check that the console has no page scroll, and look at the browser console for errors.
 - **New ideas** found while working become a new issue (`gh issue create`), not scope creep.
