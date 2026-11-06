@@ -626,7 +626,7 @@ function renderHealth() {
     const history = treatments.filter((t) => t.kind === kind).sort((a, b) => b.at - a.at).slice(0, 4);
     card.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <h3>${kind === "worming" ? "🪱" : "🕷️"} ${TREAT[kind]}</h3>${due ? dueTag(daysUntil(due)) || `<span class="tag ok">Next ${fmtDay(due)}</span>` : `<span class="tag soon">Not logged</span>`}
+        <h3>${TREAT[kind]}</h3>${due ? dueTag(daysUntil(due)) || `<span class="tag ok">Next ${fmtDay(due)}</span>` : `<span class="tag soon">Not logged</span>`}
       </div>
       <div class="muted" style="font-size:14px">${l ? `Last: ${fmtDay(l.at)}${l.product ? " · " + esc(l.product) : ""} · ${esc(l.by || "")}` : "Ask the breeder when he was last treated, and log it here."} · every ${gap} days</div>
       <div class="form"><div class="three">
@@ -864,13 +864,13 @@ function renderGuide() {
   ].join("");
 
   body.innerHTML = `<h1>${name}’s guide</h1><p class="sub">${esc(ageText())}</p>
-    ${card("🍽️ Food", meals)}
+    ${card("Food", meals)}
     ${card("Toilet trips", toilet)}
-    ${card("🗣️ The toilet routine", routine)}
+    ${card("The toilet routine", routine)}
     ${card("Accidents", accidents)}
-    ${card("🌙 Bedtime and crate", night)}
-    ${card("📞 Who to call", contacts || `<p class="muted">Add the vet and owners’ phone numbers in Settings → Sitter guide details.</p>`)}
-    ${shared.quirks ? card("📝 Quirks &amp; notes", `<p class="notes">${esc(shared.quirks)}</p>`) : ""}`;
+    ${card("Bedtime and crate", night)}
+    ${card("Who to call", contacts || `<p class="muted">Add the vet and owners’ phone numbers in Settings → Sitter guide details.</p>`)}
+    ${shared.quirks ? card("Quirks &amp; notes", `<p class="notes">${esc(shared.quirks)}</p>`) : ""}`;
 }
 $("#openGuide").onclick = () => { showTab("guide"); renderGuide(); };
 $("#guideBack").onclick = () => showTab("settings");
