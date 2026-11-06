@@ -1,0 +1,40 @@
+name: Reminders
+
+# Sends phone reminders (a trip outside is due, treatments, photo of the day) through Firebase Cloud Messaging.
+# Needs two repository secrets (see README, "Reminders"): FIREBASE_SERVICE_ACCOUNT and RILEY_HOUSEHOLD.
+# Without them it does nothing. GitHub may delay scheduled runs by a few minutes, so reminders can arrive a little late.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only show what would be sent (sends nothing)"
+        type: boolean
+        default: true
+
+concurrency:
+  group: reminders
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: scripts/reminders/package-lock.json
+      - run: npm ci
+        working-directory: scripts/reminders
+      - run: node send.mjs ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '--dry-run' || '' }}
+        working-directory: scripts/reminders
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          RILEY_HOUSEHOLD: ${{ secrets.RILEY_HOUSEHOLD }}

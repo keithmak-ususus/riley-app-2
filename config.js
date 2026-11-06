@@ -10,6 +10,10 @@ export const firebaseConfig = {
   measurementId: "G-N5DHL78REP",
 };
 
+// Web push key for phone reminders (Firebase console → Project settings → Cloud Messaging → Web Push certificates →
+// Generate key pair, then paste the public key here). It is public by design, not a secret. See the README.
+export const vapidKey = "PASTE_ME";
+
 // Defaults – all editable later in the app's Settings.
 export const defaults = {
   dogName: "Riley",

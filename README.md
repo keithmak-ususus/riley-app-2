@@ -30,7 +30,21 @@ A shared puppy log for the household. The iPad shows a live console, and the pho
 
 Then in the app: **⚙️ Settings → Sitters**, enter a name and dates, tap **Create invite**, send the link and tell them the PIN another way. They can log, see Today and read the sitter guide until the end of the last day. They can't see health, weights, photos or settings, and they can only edit or delete their own entries. **Revoke** cuts them off straight away. The invite id is a long random string and the PIN is stored separately from it (owners only), so a leaked link alone doesn't work. Firestore has no rate limiting, so keep invites short-lived.
 
-**Testing the rules:** `cd tests/rules && npm install && npm test` (needs Java for the Firebase emulator). Run it after any change to `firestore.rules`.
+### Reminders (phone notifications)
+A GitHub Actions job runs every 15 minutes, works out what is due (a trip outside, a treatment or appointment, the photo-of-the-day nudge) and sends it through Firebase Cloud Messaging. It stays on the free plan: no Cloud Functions. Each person turns reminders on from **Settings → Reminders on this device** and chooses what they get, plus quiet hours (UK time). Reminders can arrive a few minutes late because GitHub delays scheduled runs.
+
+One-off setup (you do this; nothing here is committed):
+1. **Web push key.** Firebase console → Project settings (⚙️) → **Cloud Messaging** → **Web Push certificates** → **Generate key pair**. Copy the key into `vapidKey` in `config.js` and commit it. It is a public key, not a secret.
+2. **Publish the updated `firestore.rules`** (it adds the `devices` collection, where each phone's choices are stored).
+3. **Service account key (a secret).** Firebase console → Project settings → **Service accounts** → **Generate new private key**. In the GitHub repo go to **Settings → Secrets and variables → Actions → New repository secret** and add `FIREBASE_SERVICE_ACCOUNT` with the *entire contents* of the downloaded JSON file. Then delete the downloaded file. Never commit it.
+4. **Household secret.** Add a second secret, `RILEY_HOUSEHOLD`, with your household code (Settings → Household code in the app).
+5. **Try it.** Actions tab → **Reminders** → **Run workflow** (leave *dry run* ticked to see what would be sent, untick it to really send). On each phone, open the app, then **Settings → Reminders on this device → Turn on**, and tap **Show a test notification**.
+
+On an **iPhone or iPad** the app must first be added to the Home Screen (Share, then Add to Home Screen) and opened from there; iOS needs 16.4 or later. On Android, Chrome works from a normal tab. GitHub pauses scheduled workflows in a repository with no activity for 60 days, so re-run it from the Actions tab if reminders stop.
+
+How it avoids duplicates: the sender records what it has sent to each device (`households/<code>/meta/notified`, which only the service account can touch) and a trip's key is its due time, so the same trip is never sent twice and a new event gives a new trip. Trips more than 45 minutes overdue are not sent, so a gap in the schedule never produces a burst of old alerts.
+
+**Testing:** `node --test "tests/unit/*.test.mjs"` runs the planner and reminder-logic unit tests. `cd tests/rules && npm install && npm test` (needs Java for the Firebase emulator) runs the Firestore rules tests and the reminder-sender tests; run it after any change to `firestore.rules` or `scripts/reminders`. The sender has its own dependencies: `cd scripts/reminders && npm install`.
 
 The free Spark plan needs no card and is far above what a puppy log uses.
 

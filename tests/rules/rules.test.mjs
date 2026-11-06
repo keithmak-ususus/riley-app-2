@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { before, after, beforeEach, describe, it } from "node:test";
 
 const HID = "riley-abcdefghjkmnpqrs";           // 22 chars, like the app generates
-const DATA = ["events", "health", "weights", "settings", "treatments", "training", "photos", "photoFull"];
+const DATA = ["events", "health", "weights", "settings", "treatments", "training", "photos", "photoFull", "devices"];   // devices = phones registered for reminders
 let env;
 
 before(async () => {
@@ -64,6 +64,12 @@ describe("owner", () => {
   it("cannot touch collections that don't exist in the app", async () => {
     await seed();
     await assertFails(setDoc(d(google("keith", "keith@example.com"), "secrets/a"), { x: 1 }));
+  });
+  it("cannot read or write the sender's bookkeeping (meta/notified): only the server does", async () => {
+    await seed();
+    const keith = google("keith", "keith@example.com");
+    await assertFails(getDoc(d(keith, "meta/notified")));
+    await assertFails(setDoc(d(keith, "meta/notified"), { sent: {} }));
   });
   it("is denied on a household id that is too short", async () => {
     await env.withSecurityRulesDisabled(async (ctx) => {
@@ -273,7 +279,7 @@ describe("sitters: what an active sitter can do", () => {
   it("can't read health, weights, treatments, training, photos, the owners list or others' records", async () => {
     await seedInvite({ claimed: true });
     const db = sitter();
-    for (const c of ["health", "weights", "treatments", "training", "photos", "photoFull"]) await assertFails(getDoc(d(db, `${c}/x1`)));
+    for (const c of ["health", "weights", "treatments", "training", "photos", "photoFull", "devices"]) await assertFails(getDoc(d(db, `${c}/x1`)));
     await assertFails(getDoc(d(db, "meta/owners")));
     await assertFails(getDoc(d(db, "members/keith")));
   });
@@ -289,7 +295,7 @@ describe("sitters: what an active sitter can do", () => {
   it("can't write anywhere else", async () => {
     await seedInvite({ claimed: true });
     const db = sitter();
-    for (const c of ["health", "weights", "treatments", "training", "photos", "photoFull", "settings"]) await assertFails(setDoc(d(db, `${c}/new`), { at: 1 }));
+    for (const c of ["health", "weights", "treatments", "training", "photos", "photoFull", "settings", "devices"]) await assertFails(setDoc(d(db, `${c}/new`), { at: 1 }));
     await assertFails(setDoc(d(db, "meta/owners"), { emails: ["jess@example.com"] }));
     await assertFails(setDoc(d(db, `invites/${IID}`), { name: "x", startsAt: T(NOW), expiresAt: T(NOW + HOUR), createdAt: T(NOW) }));
     await assertFails(setDoc(d(db, `invitePins/${IID}`), { pin: "000000" }));

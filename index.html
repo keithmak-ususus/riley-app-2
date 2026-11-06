@@ -585,6 +585,25 @@ body:not(.sitter) .sitter-only, body.sitter .owner-only { display: none !importa
         <div class="two form" style="margin:0"><input id="sOwn1" type="email" placeholder="Your Google email" autocapitalize="off"><input id="sOwn2" type="email" placeholder="Partner's Google email" autocapitalize="off"></div></div>
       <button class="btn ghost" id="shareLink" style="width:100%;margin-bottom:12px">Share join link</button>
       <button class="btn ghost hidden" id="signOutBtn" style="width:100%;margin-bottom:12px">Sign out of Google</button>
+      <div class="owner-only hidden" id="remindersBox">
+        <h2>Reminders on this device</h2>
+        <p class="muted" id="remMsg" style="font-size:14px;margin:0 0 10px"></p>
+        <button class="btn" id="remOn" style="width:100%">Turn on reminders</button>
+        <div id="remPrefs" class="hidden">
+          <label class="check"><input type="checkbox" id="remTrip"> A trip outside is due</label>
+          <label class="check"><input type="checkbox" id="remTreat"> Treatments and appointments</label>
+          <label class="check"><input type="checkbox" id="remPhoto"> Photo of the day (from 18:00)</label>
+          <label class="check"><input type="checkbox" id="remQuiet"> Quiet hours (no reminders)</label>
+          <div class="timeRow" id="remQuietTimes">
+            <label class="efield" style="margin:0">From<input type="time" id="remFrom"></label>
+            <label class="efield" style="margin:0">To<input type="time" id="remTo"></label>
+          </div>
+          <div class="timeRow" style="margin-top:12px">
+            <button class="btn ghost" id="remTest">Show a test notification</button>
+            <button class="btn ghost" id="remOff">Turn off</button>
+          </div>
+        </div>
+      </div>
       <div class="owner-only">
         <h2>Sitters</h2>
         <p class="muted" style="font-size:13px;margin:0 0 8px">Give a sitter a link and a PIN (tell them the PIN separately). They can log and see today and the guide for the dates you choose. They can't see health, photos or settings.</p>
@@ -725,6 +744,6 @@ body:not(.sitter) .sitter-only, body.sitter .owner-only { display: none !importa
   </div>
 </div>
 
-<script type="module" src="app.js?v=c30f1589"></script>
+<script type="module" src="app.js?v=7b28de81"></script>
 </body>
 </html>

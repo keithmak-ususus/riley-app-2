@@ -247,6 +247,9 @@ One set of hand-drawn inline SVG line icons (`<symbol id="i-…">` sprite at the
 ### Header
 - **Style (phone):** a full-width band tinted 8% terracotta (`--hdr`) with a hairline below: a 52px avatar (the latest photo, or a terracotta paw mark until there is one), the dog's name at 28px bold, the age line, and two 44px round icon buttons (console, settings). The console header stays compact and flat so the screen fits without scrolling.
 
+### Reminders (Settings)
+- **Style:** a quiet block in Settings: one sentence of explanation, a full-width "Turn on reminders" button, then (once on) four 44px checkbox rows, the quiet-hours times (hidden when quiet hours are off) and two ghost buttons ("Show a test notification", "Turn off"). Notifications themselves are plain: the dog's name and one neutral sentence from the planner, never scolding, with the paw icon.
+
 ### Sitters
 - **Invite sheet (owner):** link in a read-only field, the PIN at 40px bold with wide tracking, Share link / Copy PIN, Done. **Sitter list:** hairline rows with name, dates and status, "Link & PIN" and Revoke (44px).
 - **PIN screen (sitter):** the same quiet single-column page as sign-in; the PIN box is 28px, centred, wide-tracked. **Sitter app:** the normal Log and Today, a thin bordered bar ("Hi Jess · your access runs until 13 Nov"), and a three-tab bar (Log, Today, Guide). No Settings, Health, Train or Photos. The iPad picker shows a sitter as a third button in `--p3` (a neutral brown), never a person colour.

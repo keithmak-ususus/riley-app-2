@@ -56,7 +56,7 @@ service cloud.firestore {
       // The household's data. Owners get everything.
       match /{collection}/{docId} {
         allow read, write: if isOwner()
-          && collection in ['events', 'health', 'weights', 'settings', 'treatments', 'training', 'photos', 'photoFull'];
+          && collection in ['events', 'health', 'weights', 'settings', 'treatments', 'training', 'photos', 'photoFull', 'devices'];
         // Sitters: read events and settings (the sitter guide), add events, and change only their own.
         allow read: if isSitter() && collection in ['events', 'settings'];
         allow create: if isSitter() && collection == 'events'

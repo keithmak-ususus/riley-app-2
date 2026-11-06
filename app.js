@@ -1,8 +1,9 @@
-import { openStore, DEMO } from "./store.js?v=c30f1589";
-import { defaults } from "./config.js?v=c30f1589";
-import { coach, NAME_LEVELS, SOCIAL_ITEMS } from "./coach.js?v=c30f1589";
-import { compressPhoto } from "./photos.js?v=c30f1589";
-import { nextTrip as planTrip, OUT_TYPES, AFTER_MEAL, AFTER_PLAY, RETRY_AFTER_NOTHING } from "./planner.js?v=c30f1589";
+import { openStore, DEMO } from "./store.js?v=7b28de81";
+import { defaults, vapidKey } from "./config.js?v=7b28de81";
+import { coach, NAME_LEVELS, SOCIAL_ITEMS } from "./coach.js?v=7b28de81";
+import { compressPhoto } from "./photos.js?v=7b28de81";
+import { withDefaults } from "./prefs.js?v=7b28de81";
+import { nextTrip as planTrip, OUT_TYPES, AFTER_MEAL, AFTER_PLAY, RETRY_AFTER_NOTHING } from "./planner.js?v=7b28de81";
 
 const $ = (s) => document.querySelector(s);
 const ls = { get: (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
@@ -199,6 +200,62 @@ $("#invCreate").onclick = async () => {
   $("#invName").value = ""; showInvite({ id, name }, pin);
 };
 
+// =====================================================================
+// Reminders on this device (issue #4). The sender is scripts/reminders/send.mjs, run every 15 minutes by GitHub Actions.
+// =====================================================================
+let remId = ls.get("riley:push", ""), remPrefs = withDefaults();
+const sha = async (s) => Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s))), (b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
+const iosBrowser = () => (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1))
+  && !(navigator.standalone || matchMedia("(display-mode: standalone)").matches);
+async function saveDevice(token) {
+  const id = await sha(token);
+  if (remId && remId !== id) await store.remove("devices", remId).catch(() => {});   // the phone was given a new token
+  remId = id; ls.set("riley:push", id);
+  await store.setDoc("devices", id, { token, name: me, uid: store.user()?.uid || "", prefs: remPrefs, updatedAt: Date.now() });
+}
+function renderReminders() {
+  const on = !!remId, blocked = store.push.permission() === "denied" && !on;
+  $("#remOn").classList.toggle("hidden", on); $("#remPrefs").classList.toggle("hidden", !on);
+  $("#remMsg").textContent = on ? "This device will get the reminders you choose. Quiet hours use UK time, and reminders can arrive a few minutes late."
+    : blocked ? "Notifications are blocked for this site. Allow them in your browser or phone settings, then try again."
+    : "Get a nudge when a trip outside is due, or a treatment or appointment. Each person chooses what they get on their own phone.";
+  $("#remTrip").checked = remPrefs.trip; $("#remTreat").checked = remPrefs.treatment; $("#remPhoto").checked = remPrefs.photo;
+  $("#remQuiet").checked = remPrefs.quiet.on; $("#remFrom").value = remPrefs.quiet.from; $("#remTo").value = remPrefs.quiet.to;
+  $("#remQuietTimes").classList.toggle("hidden", !remPrefs.quiet.on);
+}
+async function initReminders() {
+  if (role !== "owner" || !store.push) return;
+  const supported = await store.push.supported();
+  if (!supported && !iosBrowser()) return;                 // this browser can't do push: show nothing
+  $("#remindersBox").classList.remove("hidden");
+  const note = (t) => { $("#remMsg").textContent = t; $("#remOn").classList.add("hidden"); $("#remPrefs").classList.add("hidden"); };
+  if (!supported) return note("To get reminders on an iPhone or iPad, add this app to your Home Screen first (Share, then Add to Home Screen) and open it from there.");
+  if (!vapidKey || vapidKey === "PASTE_ME") return note("Reminders need a web push key in config.js. See the README, section Reminders.");
+  if (remId && store.push.permission() === "granted") {    // already on: pick up this phone's saved choices and refresh its token
+    const d = await store.get("devices", remId).catch(() => null);
+    if (d) remPrefs = withDefaults(d.prefs);
+    try { await saveDevice(await store.push.token(vapidKey)); } catch (e) { console.error(e); }
+  } else if (remId) { remId = ""; ls.del("riley:push"); }   // permission was taken away
+  renderReminders();
+}
+$("#remOn").onclick = async () => {
+  try { await saveDevice(await store.push.enable(vapidKey)); toast("Reminders are on for this device"); }
+  catch (e) { toast(e.code === "denied" ? "Notifications are blocked" : "Couldn't turn on reminders: " + (e.message || e.code)); }
+  renderReminders();
+};
+$("#remOff").onclick = async () => {
+  await store.push.disable(); if (remId) await store.remove("devices", remId).catch(() => {});
+  remId = ""; ls.del("riley:push"); renderReminders(); toast("Reminders are off for this device");
+};
+$("#remTest").onclick = () => store.push.test(`${shared.dogName || "Riley"}: test`, "Reminders are working on this device.").catch((e) => toast("Couldn't show it: " + (e.message || e.code)));
+function savePrefs() {
+  remPrefs = { trip: $("#remTrip").checked, treatment: $("#remTreat").checked, photo: $("#remPhoto").checked,
+    quiet: { on: $("#remQuiet").checked, from: $("#remFrom").value || "22:00", to: $("#remTo").value || "06:00" } };
+  $("#remQuietTimes").classList.toggle("hidden", !remPrefs.quiet.on);
+  if (remId) store.setDoc("devices", remId, { prefs: remPrefs, updatedAt: Date.now() });
+}
+["#remTrip", "#remTreat", "#remPhoto", "#remQuiet", "#remFrom", "#remTo"].forEach((id) => ($(id).onchange = savePrefs));
+
 async function start() {
   if (!inviteId()) $("#app").classList.remove("hidden");
   applyView();
@@ -217,7 +274,7 @@ async function start() {
 function begin() {
   if (subscribed) return; subscribed = true;
   const owner = role === "owner";
-  if (owner) { loadOwners(); $("#invFrom").value = dayKey(Date.now()); $("#invTo").value = dayKey(Date.now() + 7 * DAY); }
+  if (owner) { initReminders().catch(console.error); loadOwners(); $("#invFrom").value = dayKey(Date.now()); $("#invTo").value = dayKey(Date.now() + 7 * DAY); }
   const since = Date.now() - 10 * DAY;
   store.subscribe("events", (rows, err) => { if (rows) { events = rows; render(); } else if (err) (owner ? showSignIn("denied") : showPin({ why: "revoked" })); }, since);
   if (owner) {

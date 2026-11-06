@@ -1,0 +1,7 @@
+{
+  "name": "riley-reminders",
+  "private": true,
+  "type": "module",
+  "description": "Scheduled sender for Riley's phone reminders (run by .github/workflows/reminders.yml)",
+  "dependencies": { "firebase-admin": "^12.7.0" }
+}
