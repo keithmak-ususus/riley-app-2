@@ -137,7 +137,7 @@ components:
 
 The app is a warm, well-lit household noticeboard. It is pinned to the kitchen wall on the iPad and sits in a pocket on two phones. One clear next action, plain big figures, and everything attributed to a person so nobody has to ask "when did he last go out?". It is practical before it is cute, and calm before it is clever. It is used one-handed, in the garden, at 6am, by tired people, so nothing is small, quiet or slow.
 
-**Minimal means subtraction.** There are no shadows, no card fills, no emoji and no tinted panels except when something needs attention. Structure comes from white space, hairline dividers (`--line`) and type size. The only filled shapes are the two Outside log buttons (terracotta), a warn or alert banner, and the primary button. Everything else is outlined or plain text. Tabs and log buttons carry a small line icon above the word; tiles, counts and everything else are words only.
+**Minimal means subtraction.** There are no shadows, no card fills, no emoji and no tinted panels except when something needs attention. Structure comes from white space, hairline dividers (`--line`) and type size. The only filled shapes are the Wee and Poo buttons (a soft tint of their own colour), a warn or alert banner, and the primary button. Everything else is outlined or plain text. Tabs and log buttons carry a small line icon above the word; tiles, counts and everything else are words only.
 
 **Key Characteristics:**
 - One next action is always the loudest thing on the screen.
@@ -170,7 +170,7 @@ A warm cream and white base with one terracotta accent. Green, amber and red mea
 - **Person one** (#2F6DB5; dark #6FA3E0; night #5B8CC4) and **Person two** (#A8457A; dark #E08AB8; night #C47AA2): the two household members' badges and picker buttons, from `--p1` and `--p2`. Never reused for status.
 
 ### Named Rules
-**The One Voice Rule.** Terracotta is the only accent. If everything is terracotta, nothing is the next action.
+**The One Voice Rule.** Terracotta is the only accent for buttons, tabs and links (action icons have their own colours; see Action colours). If everything is terracotta, nothing is the next action.
 **The Status-Is-Tint Rule.** Status is a soft tinted background with a matching text colour, never a bare saturated block, so a late trip reads clearly without shouting.
 **The Token Rule.** Every colour lives in `:root` as a CSS variable, with dark and night overrides. No raw colour values elsewhere. Beyond the palette above, `--on-media` (white text on photos, person colours and dark overlays), `--scrim`, `--scrim-caption`, `--viewer-bg` and `--viewer-btn` (overlays) and `--shadow-pop` and `--shadow-modal` cover the rest.
 **The People-Aren't-Status Rule.** The two person colours never carry status meaning, and status never relies on colour alone (it also has text and an icon or tag).
@@ -215,12 +215,15 @@ Quietly rounded, one dominant radius. Tokens: `--radius` 12px (log buttons, bann
 
 ## Components
 
+### Action colours
+Each log action has its own icon colour so it can be recognised before reading: Wee teal, Poo brown, Accident red, Meal orange, Nap indigo, Play green, Excited gold, Walk purple (`--c-wee`, `--c-poo`, … with lighter dark and night values). Only the icon (and the Wee/Poo tint) uses it. The label always stays, so colour is never the only cue. These hues avoid the two person colours (blue, magenta) as far as possible and are used for action icons only, never for status.
+
 ### Icons
 One set of hand-drawn inline SVG line icons (`<symbol id="i-…">` sprite at the top of `<body>`): 24px grid, 1.75 stroke, round caps, `currentColor`, so they follow light, dark, night and the white-on-terracotta buttons. Never emoji (they differ per device and read as childish). Add a new icon as another `<symbol>`; keep the same stroke.
 
 ### Primary log button
 - **Shape:** 12px corners, at least 88px tall on phones (64px for the indoor row, 72px on the console). A 22–26px line icon above the label.
-- **Colour:** terracotta with white text for Wee and Poo; "Nothing" and every Indoors action are outlined (1.5px `--line`) with ink text.
+- **Colour:** Wee and Poo use a 12% tint of their action colour with a matching 45% border and a 34px icon; "Nothing" and the Indoors actions are outlined (1.5px `--line`). Labels are always ink.
 - **Behaviour:** a line icon and a 15–16px label; pressed state scales to 96%. Long-press (about 0.5s) opens the "When?" sheet; a tap logs "now".
 
 ### Tile
