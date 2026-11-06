@@ -1,7 +1,7 @@
-import { openStore, DEMO } from "./store.js?v=28e323ce";
-import { defaults } from "./config.js?v=28e323ce";
-import { coach, NAME_LEVELS, SOCIAL_ITEMS } from "./coach.js?v=28e323ce";
-import { compressPhoto } from "./photos.js?v=28e323ce";
+import { openStore, DEMO } from "./store.js?v=1d152463";
+import { defaults } from "./config.js?v=1d152463";
+import { coach, NAME_LEVELS, SOCIAL_ITEMS } from "./coach.js?v=1d152463";
+import { compressPhoto } from "./photos.js?v=1d152463";
 
 const $ = (s) => document.querySelector(s);
 const ls = { get: (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
@@ -125,7 +125,7 @@ function showPin(st) {
   $("#sitterMsg").textContent = st.why === "expired" ? `Your access ended on ${fmtDay(st.until - 1)}. Ask for a new invite if you are still helping.`
     : st.why === "revoked" ? "Your access has ended." : "Enter the 6-digit PIN you were given to open the app.";
   $("#pinGo").onclick = submitPin;
-  $("#pinInput").onkeydown = (e) => e.key === "Enter" && submitPin();
+  $("#pinInput").onkeydown = (e) => { if (e.key === "Enter") submitPin(); };   // never return false here: that would swallow every key
   $("#sitterLeave").onclick = async () => { ls.del("riley:invite"); try { await store?.signOut(); } catch {} location.reload(); };
 }
 async function submitPin() {
