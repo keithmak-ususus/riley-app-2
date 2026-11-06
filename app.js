@@ -109,7 +109,7 @@ async function start() {
   store.subscribe("weights", (rows) => { if (rows) { weights = rows.sort((a, b) => a.at - b.at); renderWeights(); render(); } });
   store.subscribe("treatments", (rows) => { if (rows) { treatments = rows; renderHealth(); render(); } });
   store.subscribe("training", (rows) => { if (rows) { training = rows.sort((a, b) => a.at - b.at); renderTrain(); render(); } });
-  store.subscribe("photos", (rows) => { if (rows) { photos = rows.sort((a, b) => a.day.localeCompare(b.day)); renderPhotos(); render(); } });
+  store.subscribe("photos", (rows) => { if (rows) { photos = rows.sort((a, b) => a.day.localeCompare(b.day)); renderPhotos(); render(); if (isDisplay() && $("#carousel").classList.contains("none")) slide(); } });
   store.subscribe("settings", (rows) => {
     const s = rows && rows.find((r) => r.id === "main");
     shared = { ...defaults, ...(s || {}), intervals: { ...defaults.intervals, ...(s?.intervals || {}) } };
@@ -137,21 +137,20 @@ function applyView() {
   const pref = ls.get("riley:view", "auto");
   const c = pref === "console" || (pref === "auto" && Math.min(innerWidth, innerHeight) >= 700);
   document.body.classList.toggle("console", c);
+  document.body.classList.toggle("display", c && ls.get("riley:display", "") === "1");
+  syncDisplay();
   if (c) keepAwake(); else showTab(ls.get("riley:tab", "log"));
 }
 addEventListener("resize", () => ls.get("riley:view", "auto") === "auto" && applyView());
 $("#viewToggle").onclick = () => { ls.set("riley:view", "console"); applyView(); };
-// On the console there is no Settings screen, so Settings switches this device to phone view (asks first, since the iPad is shared).
-function consoleToSettings() {
-  if (!confirm("Open Settings? This switches this device to phone view. Use the Console button to switch back.")) return;
-  ls.set("riley:view", "phone"); applyView(); showTab("settings");
-}
 // Back from console to phone view. On a phone it's immediate; on a tablet or desktop it asks first (the iPad is shared).
 $("#phoneView").onclick = () => {
   if (innerWidth >= 700 && !confirm("Switch this device to phone view? Use the monitor button to switch back.")) return;
   ls.set("riley:view", "phone"); applyView();
 };
-$("#gear").onclick = () => (isConsole() ? consoleToSettings() : showTab("settings"));
+$("#gear").onclick = () => showTab("settings");   // on the console this opens as an overlay, so the view never switches
+$("#settingsDone").onclick = () => showTab("log");
+$("#displayToggle").onclick = () => { ls.set("riley:display", isDisplay() ? "" : "1"); applyView(); };
 
 let wakeLock;
 async function keepAwake() {
@@ -565,6 +564,7 @@ function render() {
   if (latest?.thumb) { if (av.src !== latest.thumb) av.src = latest.thumb; av.classList.remove("hidden"); } else av.classList.add("hidden");
 
   renderToday(); renderCoach(); renderUpcoming(); renderGuide();
+  fitCarousel();
 }
 
 function ageText() {
@@ -819,6 +819,35 @@ $("#photoInput").onchange = async (e) => {
   } catch (err) { toast("Couldn't save photo: " + err.message, [], 8000); }
 };
 
+// ---- Display mode (console, view-only): a slow photo carousel next to the status ----
+const isDisplay = () => document.body.classList.contains("display");
+let cIdx = 0, cTimer = null, cFront = 0, cDay = "";
+function syncDisplay() {
+  const on = isDisplay(), btn = $("#displayToggle");
+  btn.querySelector("span").textContent = on ? "Log" : "Display";
+  btn.querySelector("use").setAttribute("href", on ? "#i-plus" : "#i-photo");
+  btn.setAttribute("aria-label", on ? "Back to logging" : "Switch to display view");
+  clearInterval(cTimer); cTimer = null;
+  if (on) { cIdx = 0; slide(); cTimer = setInterval(() => { cIdx++; slide(); }, 12000); }
+}
+// Fill whatever height is left under the tiles, so the page never scrolls.
+function fitCarousel() {
+  const box = $("#carousel"); if (!isDisplay()) return;
+  box.style.height = Math.max(180, innerHeight - box.getBoundingClientRect().top - 14) + "px";
+}
+addEventListener("resize", () => isDisplay() && fitCarousel());
+async function slide() {
+  fitCarousel();
+  const box = $("#carousel"), list = [...photos].reverse();   // newest first, then back through the weeks
+  box.classList.toggle("none", !list.length);
+  if (!list.length) return;
+  const p = list[cIdx % list.length]; cDay = p.day;
+  const imgs = box.querySelectorAll(".slide"), next = imgs[1 - cFront], cur = imgs[cFront];
+  next.src = p.thumb; next.classList.add("on"); cur.classList.remove("on"); cFront = 1 - cFront;
+  $("#carCap").textContent = photoLabel(p);
+  try { const full = await fullOf(p); if (cDay === p.day && full && next.src !== full) next.src = full; } catch {}
+}
+
 let vIndex = 0, vCompare = false, lapseTimer = null;
 const fullCache = new Map();
 async function fullOf(p) {
@@ -982,6 +1011,7 @@ $("#sSave").onclick = async () => {
     if (emails.join() !== ownerEmails.join()) { await store.setDoc("meta", "owners", { emails }); ownerEmails = emails; }
   }
   toast("Saved"); applyView();
+  if (isConsole()) showTab("log");   // close the overlay
 };
 $("#shareLink").onclick = async () => {
   const url = `${location.origin}${location.pathname}?h=${encodeURIComponent(household)}`;
@@ -990,7 +1020,7 @@ $("#shareLink").onclick = async () => {
 };
 $("#leave").onclick = () => { if (confirm("Leave this household on this device? The data stays for everyone else.")) { ls.del("riley:hh"); location.reload(); } };
 // Tap the clock on the console to get back to phone view (for settings)
-$("#clock").onclick = consoleToSettings;
+$("#clock").onclick = () => showTab("settings");
 
 // =====================================================================
 // Boot (last, so everything above is defined)
