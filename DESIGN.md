@@ -247,6 +247,10 @@ One set of hand-drawn inline SVG line icons (`<symbol id="i-…">` sprite at the
 ### Header
 - **Style (phone):** a full-width band tinted 8% terracotta (`--hdr`) with a hairline below: a 52px avatar (the latest photo, or a terracotta paw mark until there is one), the dog's name at 28px bold, the age line, and two 44px round icon buttons (console, settings). The console header stays compact and flat so the screen fits without scrolling.
 
+### Sitters
+- **Invite sheet (owner):** link in a read-only field, the PIN at 40px bold with wide tracking, Share link / Copy PIN, Done. **Sitter list:** hairline rows with name, dates and status, "Link & PIN" and Revoke (44px).
+- **PIN screen (sitter):** the same quiet single-column page as sign-in; the PIN box is 28px, centred, wide-tracked. **Sitter app:** the normal Log and Today, a thin bordered bar ("Hi Jess · your access runs until 13 Nov"), and a three-tab bar (Log, Today, Guide). No Settings, Health, Train or Photos. The iPad picker shows a sitter as a third button in `--p3` (a neutral brown), never a person colour.
+
 ### Toast
 - **After a poo:** a larger toast asks "How was it? (optional)" with Firm / Soft / Loose / Watery chips (one tap saves the shape) and "More…" for colour and a note. It dismisses itself after 10s.
 - **Style:** inverted pill (ink background, cream text), 14px corners, with an Undo or Edit action; floats above the tab bar.

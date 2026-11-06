@@ -1,7 +1,7 @@
-import { openStore, DEMO } from "./store.js?v=de930afa";
-import { defaults } from "./config.js?v=de930afa";
-import { coach, NAME_LEVELS, SOCIAL_ITEMS } from "./coach.js?v=de930afa";
-import { compressPhoto } from "./photos.js?v=de930afa";
+import { openStore, DEMO } from "./store.js?v=28e323ce";
+import { defaults } from "./config.js?v=28e323ce";
+import { coach, NAME_LEVELS, SOCIAL_ITEMS } from "./coach.js?v=28e323ce";
+import { compressPhoto } from "./photos.js?v=28e323ce";
 
 const $ = (s) => document.querySelector(s);
 const ls = { get: (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
@@ -24,12 +24,18 @@ const TREAT = { worming: "Worming", flea: "Flea & tick" };
 
 let store, events = [], health = [], weights = [], treatments = [], training = [], photos = [], shared = { ...defaults };
 let me = ls.get("riley:me", ""), household = ls.get("riley:hh", "");
+let role = "owner", sitterUntil = 0, invites = [], memberDocs = [];   // role is "sitter" on a device opened with an invite link
+const inviteId = () => ls.get("riley:invite", "");
+const SITTER_TABS = ["log", "today", "guide"];
+const activeSitters = () => invites.filter((i) => i.startsAt <= Date.now() && i.expiresAt > Date.now());
 
 // =====================================================================
 // Setup
 // =====================================================================
 const params = new URLSearchParams(location.search);
-if (params.get("h")) { household = params.get("h"); ls.set("riley:hh", household); history.replaceState(null, "", location.pathname); }
+if (params.get("h")) { household = params.get("h"); ls.set("riley:hh", household); if (!params.get("i")) ls.del("riley:invite"); }
+if (params.get("i")) ls.set("riley:invite", params.get("i"));   // a sitter invite link: ?h=<household>&i=<invite>
+if (params.get("h") || params.get("i")) history.replaceState(null, "", location.pathname);
 if (DEMO) { $("#setupDemo").classList.remove("hidden"); $("#demoNote").classList.remove("hidden"); }
 
 function showSetup() {
@@ -92,31 +98,144 @@ async function loadOwners() {
 }
 $("#signOutBtn").onclick = async () => { if (confirm("Sign out of Google on this device?")) { await store.signOut(); location.reload(); } };
 
+// =====================================================================
+// Sitters: an invite link + a PIN (rules in firestore.rules). Owners create and revoke invites in Settings.
+// =====================================================================
+async function sitterState() {
+  const uid = store.user()?.uid; if (!uid) return { why: "pin" };
+  let m = null; try { m = await store.get("members", uid); } catch {}
+  if (!m || m.role !== "sitter" || m.inviteId !== inviteId()) return { why: "pin" };
+  if (m.expiresAt <= Date.now()) return { why: "expired", until: m.expiresAt };
+  me = m.name; sitterUntil = m.expiresAt; return { ok: true };
+}
+async function startSitter() {
+  role = "sitter"; document.body.classList.add("sitter");
+  const st = await sitterState();
+  if (!st.ok) return showPin(st);
+  $("#sitterGate").classList.add("hidden"); $("#app").classList.remove("hidden");
+  $("#sitterBar").innerHTML = `Hi <b>${esc(me)}</b> · your access runs until ${esc(fmtDay(sitterUntil - 1))}`;
+  $("#sitterBar").classList.remove("hidden");
+  applyView(); begin();
+}
+function showPin(st) {
+  $("#app").classList.add("hidden"); $("#sitterGate").classList.remove("hidden");
+  const ended = st.why === "expired" || st.why === "revoked";
+  $("#pinWrap").classList.toggle("hidden", ended); $("#pinGo").classList.toggle("hidden", ended);
+  $("#pinErr").textContent = "";
+  $("#sitterMsg").textContent = st.why === "expired" ? `Your access ended on ${fmtDay(st.until - 1)}. Ask for a new invite if you are still helping.`
+    : st.why === "revoked" ? "Your access has ended." : "Enter the 6-digit PIN you were given to open the app.";
+  $("#pinGo").onclick = submitPin;
+  $("#pinInput").onkeydown = (e) => e.key === "Enter" && submitPin();
+  $("#sitterLeave").onclick = async () => { ls.del("riley:invite"); try { await store?.signOut(); } catch {} location.reload(); };
+}
+async function submitPin() {
+  const err = $("#pinErr"), pin = $("#pinInput").value.trim(), fail = (m) => { err.textContent = m; };
+  if (!/^\d{6}$/.test(pin)) return fail("The PIN is 6 digits.");
+  $("#pinGo").disabled = true;
+  try {
+    if (!store.user()) await store.signInSitter();
+    const inv = await store.get("invites", inviteId());
+    if (!inv) return fail("This invite isn't valid any more. Ask for a new link.");
+    if (inv.expiresAt <= Date.now()) return fail("This invite has ended. Ask for a new link.");
+    if (inv.startsAt > Date.now()) return fail(`This invite starts on ${fmtDay(inv.startsAt)}.`);
+    await store.setDoc("members", store.user().uid, { role: "sitter", name: inv.name, startsAt: store.ts(inv.startsAt),
+      expiresAt: store.ts(inv.expiresAt), inviteId: inviteId(), pin });
+    err.textContent = ""; $("#pinInput").value = "";
+    return startSitter();
+  } catch (e) {
+    fail(e.code === "permission-denied" ? "That PIN didn't work. Check it and try again."
+      : e.code === "auth/operation-not-allowed" ? "Anonymous sign-in isn't switched on in Firebase yet (Authentication → Sign-in method → Anonymous)."
+      : "Couldn't connect: " + (e.message || e.code));
+  } finally { $("#pinGo").disabled = false; }
+}
+
+const randId = (n) => Array.from(crypto.getRandomValues(new Uint8Array(n)), (b) => "abcdefghjkmnpqrstuvwxyz23456789"[b % 31]).join("");
+function renderSitters() {
+  const box = $("#sitterList"), now = Date.now();
+  box.innerHTML = invites.length ? "" : `<div class="empty">No sitters yet</div>`;
+  [...invites].sort((x, y) => y.startsAt - x.startsAt).forEach((i) => {
+    const status = i.expiresAt <= now ? "Ended" : i.startsAt > now ? `Starts ${fmtDay(i.startsAt)}` : "Active";
+    const el = document.createElement("div"); el.className = "srow";
+    el.innerHTML = `<div class="what">${esc(i.name)}<small>${fmtDay(i.startsAt)} – ${fmtDay(i.expiresAt - 1)} · ${status}</small></div>
+      <button type="button" data-a="show">Link &amp; PIN</button>
+      <button type="button" class="danger" data-a="revoke">${status === "Ended" ? "Remove" : "Revoke"}</button>`;
+    el.querySelector('[data-a="show"]').onclick = async () => showInvite(i, (await store.get("invitePins", i.id).catch(() => null))?.pin || "");
+    el.querySelector('[data-a="revoke"]').onclick = () => revokeInvite(i);
+    box.append(el);
+  });
+}
+function showInvite(i, pin) {
+  const link = `${location.origin}${location.pathname}?h=${encodeURIComponent(household)}&i=${i.id}`;
+  $("#invTitle").textContent = `Invite for ${i.name}`; $("#invLink").value = link; $("#invPin").textContent = pin || "······";
+  $("#invShare").onclick = async () => {
+    try { if (navigator.share) await navigator.share({ title: `${shared.dogName}'s app`, text: `Hi ${i.name}, here's the link to ${shared.dogName}'s app. I'll tell you the PIN separately.`, url: link });
+          else { await navigator.clipboard.writeText(link); toast("Link copied"); } } catch {}
+  };
+  $("#invCopyPin").onclick = async () => { try { await navigator.clipboard.writeText(pin); toast("PIN copied"); } catch { toast("PIN: " + pin); } };
+  $("#invDone").onclick = () => $("#inviteModal").classList.add("hidden");
+  $("#inviteModal").classList.remove("hidden");
+}
+async function revokeInvite(i) {
+  if (!confirm(`Remove ${i.name}'s access now? They'll be signed out straight away.`)) return;
+  for (const m of memberDocs.filter((m) => m.inviteId === i.id)) await store.remove("members", m.id);
+  await store.remove("invites", i.id); await store.remove("invitePins", i.id);
+  toast(`${i.name}'s access removed`);
+}
+$("#invCreate").onclick = async () => {
+  const err = $("#invErr"), name = $("#invName").value.trim(), from = $("#invFrom").value, to = $("#invTo").value;
+  const fail = (m) => { err.textContent = m; err.classList.remove("hidden"); };
+  if (!name) return fail("Add the sitter's name");
+  if (!from || !to) return fail("Pick the dates");
+  const startsAt = new Date(from + "T00:00").getTime(), expiresAt = new Date(to + "T23:59:59").getTime() + 999;
+  if (!(expiresAt > startsAt)) return fail("The end date must be after the start");
+  if (expiresAt < Date.now()) return fail("That's already in the past");
+  if (expiresAt - startsAt > 60 * DAY) return fail("Sitter access is limited to 60 days at a time");
+  err.classList.add("hidden");
+  const id = randId(22), pin = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1e6).padStart(6, "0");
+  try {
+    await store.setDoc("invites", id, { name, startsAt: store.ts(startsAt), expiresAt: store.ts(expiresAt), createdAt: store.ts(Date.now()) });
+    await store.setDoc("invitePins", id, { pin });
+  } catch (e) { return fail("Couldn't create the invite: " + (e.message || e.code)); }
+  $("#invName").value = ""; showInvite({ id, name }, pin);
+};
+
 async function start() {
-  $("#app").classList.remove("hidden");
+  if (!inviteId()) $("#app").classList.remove("hidden");
   applyView();
   try { store = store || await openStore(household); }
   catch (e) { $("#nudge").textContent = "Couldn't connect: " + e.message; $("#nudge").className = "nudge"; return; }
+  if (inviteId()) return startSitter();   // opened from a sitter's invite link
+  role = "owner"; document.body.classList.remove("sitter");
   if (store.needsSignIn()) return showSignIn();
   $("#signin").classList.add("hidden");
   const access = await claimAccess();
   if (access !== "ok") return showSignIn(access);
+  begin();
+}
+
+// Start listening to the data this person may see (a sitter may only see events and settings).
+function begin() {
   if (subscribed) return; subscribed = true;
-  loadOwners();
+  const owner = role === "owner";
+  if (owner) { loadOwners(); $("#invFrom").value = dayKey(Date.now()); $("#invTo").value = dayKey(Date.now() + 7 * DAY); }
   const since = Date.now() - 10 * DAY;
-  store.subscribe("events", (rows, err) => { if (rows) { events = rows; render(); } else if (err) showSignIn("denied"); }, since);
-  store.subscribe("health", (rows) => { if (rows) { health = rows; renderHealth(); } });
-  store.subscribe("weights", (rows) => { if (rows) { weights = rows.sort((a, b) => a.at - b.at); renderWeights(); render(); } });
-  store.subscribe("treatments", (rows) => { if (rows) { treatments = rows; renderHealth(); render(); } });
-  store.subscribe("training", (rows) => { if (rows) { training = rows.sort((a, b) => a.at - b.at); renderTrain(); render(); } });
-  store.subscribe("photos", (rows) => { if (rows) { photos = rows.sort((a, b) => a.day.localeCompare(b.day)); renderPhotos(); render(); if (isDisplay() && $("#carousel").classList.contains("none")) slide(); } });
+  store.subscribe("events", (rows, err) => { if (rows) { events = rows; render(); } else if (err) (owner ? showSignIn("denied") : showPin({ why: "revoked" })); }, since);
+  if (owner) {
+    store.subscribe("invites", (rows) => { if (rows) { invites = rows; renderSitters(); } });
+    store.subscribe("members", (rows) => { if (rows) memberDocs = rows; });
+    store.subscribe("health", (rows) => { if (rows) { health = rows; renderHealth(); } });
+    store.subscribe("weights", (rows) => { if (rows) { weights = rows.sort((a, b) => a.at - b.at); renderWeights(); render(); } });
+    store.subscribe("treatments", (rows) => { if (rows) { treatments = rows; renderHealth(); render(); } });
+    store.subscribe("training", (rows) => { if (rows) { training = rows.sort((a, b) => a.at - b.at); renderTrain(); render(); } });
+    store.subscribe("photos", (rows) => { if (rows) { photos = rows.sort((a, b) => a.day.localeCompare(b.day)); renderPhotos(); render(); if (isDisplay() && $("#carousel").classList.contains("none")) slide(); } });
+  }
   store.subscribe("settings", (rows) => {
     const s = rows && rows.find((r) => r.id === "main");
     shared = { ...defaults, ...(s || {}), intervals: { ...defaults.intervals, ...(s?.intervals || {}) } };
     ensureMember();
     fillSettings(); render(); renderHealth(); renderTrain(); renderPhotos();
   });
-  setInterval(render, 20000);
+  setInterval(() => { render(); if (role === "sitter" && sitterUntil && Date.now() >= sitterUntil) location.reload(); }, 20000);
   render(); renderHealth(); renderTrain();
 }
 
@@ -124,7 +243,7 @@ async function start() {
 let memberSync = false;
 function ensureMember() {
   const m = shared.members || [];
-  if (memberSync || !me || m.includes(me) || m.length >= 2 || document.body.classList.contains("console")) return;
+  if (role === "sitter" || memberSync || !me || m.includes(me) || m.length >= 2 || document.body.classList.contains("console")) return;
   memberSync = true;
   store.setDoc("settings", "main", { members: [...m, me] }).finally(() => (memberSync = false));
 }
@@ -160,7 +279,7 @@ document.addEventListener("visibilitychange", () => document.visibilityState ===
 
 const TABS = ["log", "today", "train", "health", "photos", "settings", "guide"];
 function showTab(t) {
-  if (!TABS.includes(t)) t = "log";
+  if (!TABS.includes(t) || (role === "sitter" && !SITTER_TABS.includes(t))) t = "log";
   ls.set("riley:tab", t);
   for (const id of TABS) $("#" + id).classList.toggle("hidden", id !== t);
   document.querySelectorAll("nav.tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === t));
@@ -192,6 +311,10 @@ function who(title = "Who's logging?") {
       b.textContent = name; b.style.background = `var(--p${i + 1})`;
       b.onclick = () => done(name); box.append(b);
     });
+    for (const s of activeSitters()) {   // a sitter whose access is active is a third option on the shared iPad
+      const b = document.createElement("button");
+      b.textContent = s.name; b.className = "sitterbtn"; b.onclick = () => done(s.name); box.append(b);
+    }
     const timer = setTimeout(() => done(null), 15000);
     function done(v) { clearTimeout(timer); modal.classList.add("hidden"); resolve(v); }
     $("#whoCancel").onclick = () => done(null);
@@ -237,6 +360,7 @@ async function log(type, at = Date.now()) {
   const by = await who(`${LABEL[type]} – who's logging?`);
   if (by === null) return;
   const ev = { type, at, by };
+  if (store.user()) ev.byUid = store.user().uid;   // lets a sitter edit or undo only their own entries
   if (type === "meal" && portion()) ev.grams = portion();
   const id = await store.add("events", ev);
   navigator.vibrate?.(30);
@@ -600,12 +724,14 @@ function renderToday() {
     const row = document.createElement("div"); row.className = "row";
     const isMeal = e.type === "meal";
     const detail = isPoo(e.type) ? pooDetail(e) : "";
-    const hint = isMeal ? "Tap to edit time or grams" : detail ? esc(detail) : isPoo(e.type) && i === 0 ? "Tap to add detail" : i === 0 ? "Tap to edit time" : "";
+    const mine = role !== "sitter" || e.byUid === store.user()?.uid;
+    const hint = !mine ? "" : isMeal ? "Tap to edit time or grams" : detail ? esc(detail) : isPoo(e.type) && i === 0 ? "Tap to add detail" : i === 0 ? "Tap to edit time" : "";
     row.innerHTML = `<span class="t">${hm(e.at)}</span>
       <button class="what">${esc(LABEL[e.type] || e.type)}${isMeal && e.grams ? ` · ${e.grams} g` : ""}${hint ? `<small>${hint}</small>` : ""}</button>
       ${byline(e.by)}<button class="x" aria-label="Delete">×</button>`;
-    row.querySelector(".what").onclick = () => editEntry(e);
-    row.querySelector(".x").onclick = () => confirm(`Delete "${LABEL[e.type]}" at ${hm(e.at)}?`) && store.remove("events", e.id);
+    const what = row.querySelector(".what");
+    if (mine) what.onclick = () => editEntry(e); else { what.disabled = true; row.querySelector(".x").remove(); }
+    if (mine) row.querySelector(".x").onclick = () => confirm(`Delete "${LABEL[e.type]}" at ${hm(e.at)}?`) && store.remove("events", e.id);
     tl.append(row);
   });
 }
@@ -956,7 +1082,7 @@ function renderGuide() {
     ${shared.quirks ? card("Quirks &amp; notes", `<p class="notes">${esc(shared.quirks)}</p>`) : ""}`;
 }
 $("#openGuide").onclick = () => { showTab("guide"); renderGuide(); };
-$("#guideBack").onclick = () => showTab("settings");
+$("#guideBack").onclick = () => showTab(role === "sitter" ? "log" : "settings");
 $("#guidePrint").onclick = () => print();
 
 // =====================================================================
@@ -1025,4 +1151,4 @@ $("#clock").onclick = () => showTab("settings");
 // =====================================================================
 // Boot (last, so everything above is defined)
 // =====================================================================
-if (household && me) start(); else showSetup();
+if (household && (me || inviteId())) start(); else showSetup();

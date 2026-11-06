@@ -19,20 +19,22 @@ A household puppy log for Riley. The iPad runs it as a wall console, and two pho
 ## Data (`households/<code>/…`)
 | Collection | Shape |
 |---|---|
-| `events` | `{type, at, by, grams?, shape?, colour?, note?}` (`shape`/`colour`/`note` only on `poo` and `acc_poo`; `shape` = firm\|soft\|loose\|watery, `colour` = usual\|dark\|pale\|green\|red, `note` ≤ 140 chars; all optional, `""` = cleared). Types: `wee poo out acc_wee acc_poo meal play excited sleep wake walk` |
+| `events` | `{type, at, by, byUid?, grams?, shape?, colour?, note?}` (`byUid` = auth uid of whoever logged it; a sitter may only edit or delete entries with their own uid) (`shape`/`colour`/`note` only on `poo` and `acc_poo`; `shape` = firm\|soft\|loose\|watery, `colour` = usual\|dark\|pale\|green\|red, `note` ≤ 140 chars; all optional, `""` = cleared). Types: `wee poo out acc_wee acc_poo meal play excited sleep wake walk` |
 | `treatments` | `{kind: "worming"\|"flea", at, product, by}`. Next due = last + `settings.intervals[kind]` days |
 | `training` | `{skill: "name", score 0–5, level}` · `{skill: "crate", minutes, whined}` · `{skill: "social", item, reaction: "happy"\|"unsure"}`, plus `at` and `by` |
 | `health` | reminders `{kind, title, due "YYYY-MM-DD", done, doneAt, doneBy}` |
 | `weights` | `{kg, at, by}` |
 | `photos` / `photoFull` | doc id = `YYYY-MM-DD`. `photos` holds `{thumb, w, h, at, by}` and `photoFull` holds `{full}` (loaded only in the viewer) |
-| `members` | doc id = auth uid: `{role: "owner", name, email, createdAt}`. Written only by the owner claiming their own record |
+| `members` | doc id = auth uid. Owner: `{role: "owner", name, email, createdAt}`, written only by the owner claiming their own record. Sitter: `{role: "sitter", name, startsAt, expiresAt, inviteId, pin}`, written only by the sitter, and only if the PIN matches the invite and the dates mirror it |
+| `invites` | doc id = random 22-char invite id: `{name, startsAt, expiresAt, createdAt}` (Timestamps). Owners create/list/delete; any signed-in user can `get` one by id |
+| `invitePins` | doc id = the invite id: `{pin: "123456"}`. Owner-only, so knowing the link isn't enough |
 | `meta/owners` | `{emails: [..]}` – verified Google emails allowed to be owners (max 2, lower-case). The first Google account to arrive creates it |
 | `settings/main` | `members[2]`, `dogName`, `birthDate`, `arrivalDate`, `adultSize`, `mealsPerDay`, `dailyGrams`, `gramsSetWeight`, `weeIntervalMin`, `bedtime`, `intervals{worming,flea}`, `train{nameLevel}`, `dismissed{id: untilMs}`, sitter-guide info: `foodBrand`, `mealTimes`, `vetName/vetPhone/vetAddress`, `emergencyVetName/emergencyVetPhone`, `ownerPhones[2]` (same order as `members`), `crateNotes`, `quirks` |
 
 A new event type needs entries in `LABEL` and `EMOJI`, and in `OUT_TYPES` if it counts as a trip outside.
 
 ## People
-There are exactly two household `members`. Every record stores `by`. Phones log as their owner. On the iPad console, `who()` shows a picker, so any new logging action must go through `await who()`, and must handle `null` (cancelled).
+There are exactly two household `members` (owners), plus any number of time-limited **sitters** (`role` "sitter", see Settings → Sitters). A sitter device is opened with `?h=<household>&i=<invite>` and a PIN; `role` is "sitter" there, the UI is cut down to Log, Today and Guide (`body.sitter`), and the rules only let them read events and settings and write their own events. Active sitters appear as a third option in the iPad picker. Never add a screen or write that a sitter shouldn't have without updating `firestore.rules` and its tests first. Every record stores `by`. Phones log as their owner. On the iPad console, `who()` shows a picker, so any new logging action must go through `await who()`, and must handle `null` (cancelled).
 
 ## Two views – always check both
 - **Phone** (< 700px or set in Settings): tab bar with Log, Today, Train, Health and Photos. Settings opens from the ⚙️ button.

@@ -1,6 +1,6 @@
 // Tiny data layer: Firebase Firestore when configured, otherwise a local demo store.
 // Collections live under households/<code>/<collection>.
-import { firebaseConfig } from "./config.js?v=de930afa";
+import { firebaseConfig } from "./config.js?v=28e323ce";
 
 export const DEMO = !firebaseConfig.apiKey || firebaseConfig.apiKey === "PASTE_ME";
 
@@ -22,6 +22,8 @@ async function firebaseStore(household) {
     localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() }),
   });
   const col = (name) => fs.collection(db, "households", household, name);
+  // Firestore Timestamps become plain milliseconds, so the app never sees Firebase types.
+  const plain = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v && typeof v.toMillis === "function" ? v.toMillis() : v]));
 
   return {
     // Owners sign in with Google. A leftover anonymous session from the old setup doesn't count.
@@ -37,17 +39,19 @@ async function firebaseStore(household) {
       }
     },
     signOut: () => A.signOut(auth),
+    signInSitter: () => A.signInAnonymously(auth),   // a sitter has no account: the invite link and PIN are what let them in
+    ts: (ms) => fs.Timestamp.fromMillis(ms),
     subscribe(name, cb, sinceMs) {
       const q = sinceMs
         ? fs.query(col(name), fs.where("at", ">=", sinceMs), fs.orderBy("at"))
         : fs.query(col(name));
-      return fs.onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+      return fs.onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...plain(d.data()) }))),
         (err) => { console.error(err); cb(null, err); });
     },
     add: async (name, obj) => (await fs.addDoc(col(name), obj)).id,
     update: (name, id, patch) => fs.updateDoc(fs.doc(col(name), id), patch),
     remove: (name, id) => fs.deleteDoc(fs.doc(col(name), id)),
-    get: async (name, id) => { const s = await fs.getDoc(fs.doc(col(name), id)); return s.exists() ? { id: s.id, ...s.data() } : null; },
+    get: async (name, id) => { const s = await fs.getDoc(fs.doc(col(name), id)); return s.exists() ? { id: s.id, ...plain(s.data()) } : null; },
     setDoc: (name, id, obj) => fs.setDoc(fs.doc(col(name), id), obj, { merge: true }),
   };
 }
@@ -64,8 +68,15 @@ function demoStore(household) {
   };
   addEventListener("storage", (e) => subs.forEach((s) => e.key === key(s.n) && s.fire()));
 
+  // Demo mode has no real accounts. A sitter session is simulated (with the same PIN, date and invite checks the
+  // Firestore rules make) so the whole sitter flow can be tried and tested without Firebase.
+  const uidKey = `riley-demo:${household}:uid`;
+  const denied = () => Object.assign(new Error("Missing or insufficient permissions."), { code: "permission-denied" });
   return {
-    needsSignIn: () => false, user: () => null, signIn: async () => {}, signOut: async () => {},
+    needsSignIn: () => false, signIn: async () => {}, signOut: async () => { localStorage.removeItem(uidKey); },
+    user: () => { const uid = localStorage.getItem(uidKey); return uid ? { uid, isAnonymous: true } : null; },
+    signInSitter: async () => { if (!localStorage.getItem(uidKey)) localStorage.setItem(uidKey, "sitter-" + Math.random().toString(36).slice(2, 10)); },
+    ts: (ms) => ms,
     subscribe(n, cb, sinceMs) {
       const s = { n, fire: () => cb(read(n).filter((r) => !sinceMs || r.at >= sinceMs).sort((a, b) => (a.at || 0) - (b.at || 0))) };
       subs.push(s); setTimeout(s.fire);
@@ -75,7 +86,17 @@ function demoStore(household) {
     async update(n, id, patch) { write(n, read(n).map((r) => (r.id === id ? { ...r, ...patch } : r))); },
     async remove(n, id) { write(n, read(n).filter((r) => r.id !== id)); },
     async get(n, id) { return read(n).find((r) => r.id === id) || null; },
-    async setDoc(n, id, obj) {  // merge like Firestore's { merge: true }: nested objects merge, arrays replace
+    async setDoc(n, id, obj) {
+      const uid = localStorage.getItem(uidKey);
+      if (uid && n === "members") {  // a sitter claiming their record: mirror firestore.rules
+        const inv = read("invites").find((r) => r.id === obj.inviteId), pin = read("invitePins").find((r) => r.id === obj.inviteId);
+        const ok = id === uid && inv && pin && pin.pin === obj.pin && obj.role === "sitter" && obj.name === inv.name
+          && obj.startsAt === inv.startsAt && obj.expiresAt === inv.expiresAt && inv.startsAt <= Date.now() && inv.expiresAt > Date.now();
+        if (!ok) throw denied();
+      } else if (uid && !(n === "events")) throw denied();
+      return this._set(n, id, obj);
+    },
+    async _set(n, id, obj) {  // merge like Firestore's { merge: true }: nested objects merge, arrays replace
       const merge = (a, b) => {
         const o = { ...a };
         for (const [k, v] of Object.entries(b)) o[k] = v && typeof v === "object" && !Array.isArray(v) && a?.[k] && typeof a[k] === "object" ? merge(a[k], v) : v;

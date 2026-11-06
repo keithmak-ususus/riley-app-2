@@ -24,6 +24,12 @@ A shared puppy log for the household. The iPad shows a live console, and the pho
 
 **Upgrading from the anonymous-sign-in version:** publish the new `firestore.rules` **first** (Firebase console → Firestore → Rules → paste the file → Publish), *then* open the app and sign in with Google. The sign-in has to write your owner record, and the old rules don't allow that, so signing in before publishing shows "isn't an owner". Once the rules are published, devices still on the old anonymous sign-in lose access until their owner signs in with Google; the data itself stays where it is. The first Google account to sign in claims the household, so do your own sign-in straight after publishing.
 
+**Sitters (two things to do in Firebase, once):**
+1. **Authentication → Sign-in method → Anonymous → Enable.** Sitters have no Google account: the invite link and a PIN are what let them in, and they sign in anonymously behind the scenes.
+2. **Publish the updated `firestore.rules`** (Firestore → Rules → paste → Publish). Existing owners are unaffected.
+
+Then in the app: **⚙️ Settings → Sitters**, enter a name and dates, tap **Create invite**, send the link and tell them the PIN another way. They can log, see Today and read the sitter guide until the end of the last day. They can't see health, weights, photos or settings, and they can only edit or delete their own entries. **Revoke** cuts them off straight away. The invite id is a long random string and the PIN is stored separately from it (owners only), so a leaked link alone doesn't work. Firestore has no rate limiting, so keep invites short-lived.
+
 **Testing the rules:** `cd tests/rules && npm install && npm test` (needs Java for the Firebase emulator). Run it after any change to `firestore.rules`.
 
 The free Spark plan needs no card and is far above what a puppy log uses.

@@ -4,7 +4,8 @@ service cloud.firestore {
     // Each household lives under a long random code (the household id).
     // Access is per person: a signed-in user needs a document at households/<hid>/members/<their uid>.
     //   owner  – the two household members, signed in with Google. Full access.
-    // (Sitters arrive in a later step: role "sitter" with an expiry and per-collection limits.)
+    //   sitter – a temporary helper (anonymous sign-in + an invite link + a PIN). Can read events and settings,
+    //            add events, and edit or delete only their own events. Access ends at the invite's expiry.
     match /households/{hid} {
       function validHid() { return hid.size() >= 18; }
       function signedIn() { return request.auth != null; }
@@ -21,6 +22,28 @@ service cloud.firestore {
         return validHid() && activeMember() && get(membersPath(request.auth.uid)).data.role == 'owner';
       }
 
+      function isSitter() {
+        return validHid() && activeMember() && memberData().role == 'sitter';
+      }
+      function invitePath(id) { return /databases/$(database)/documents/households/$(hid)/invites/$(id); }
+      function pinPath(id) { return /databases/$(database)/documents/households/$(hid)/invitePins/$(id); }
+      function eventFields() { return ['type', 'at', 'by', 'byUid', 'grams', 'shape', 'colour', 'note']; }
+      // A sitter claims their own record by proving they know the invite's PIN. The record must mirror the invite
+      // (name, start and end) so a sitter can't write themselves a longer stay.
+      function sitterClaim() {
+        let d = request.resource.data;
+        return request.auth.token.firebase.sign_in_provider == 'anonymous'
+          && d.keys().hasOnly(['role', 'name', 'startsAt', 'expiresAt', 'inviteId', 'pin'])
+          && d.role == 'sitter' && d.inviteId is string && d.inviteId.size() >= 16
+          && exists(invitePath(d.inviteId)) && exists(pinPath(d.inviteId))
+          && get(pinPath(d.inviteId)).data.pin == d.pin
+          && d.name == get(invitePath(d.inviteId)).data.name
+          && d.startsAt == get(invitePath(d.inviteId)).data.startsAt
+          && d.expiresAt == get(invitePath(d.inviteId)).data.expiresAt
+          && get(invitePath(d.inviteId)).data.startsAt <= request.time
+          && get(invitePath(d.inviteId)).data.expiresAt > request.time;
+      }
+
       // Only a verified Google account can be an owner.
       function googleEmail() {
         return signedIn()
@@ -30,10 +53,39 @@ service cloud.firestore {
       }
       function myEmail() { return request.auth.token.email.lower(); }
 
-      // The household's data. Owners only (for now).
+      // The household's data. Owners get everything.
       match /{collection}/{docId} {
         allow read, write: if isOwner()
           && collection in ['events', 'health', 'weights', 'settings', 'treatments', 'training', 'photos', 'photoFull'];
+        // Sitters: read events and settings (the sitter guide), add events, and change only their own.
+        allow read: if isSitter() && collection in ['events', 'settings'];
+        allow create: if isSitter() && collection == 'events'
+          && request.resource.data.keys().hasOnly(eventFields())
+          && request.resource.data.byUid == request.auth.uid;
+        allow update: if isSitter() && collection == 'events'
+          && resource.data.byUid == request.auth.uid
+          && request.resource.data.keys().hasOnly(eventFields())
+          && request.resource.data.byUid == request.auth.uid;
+        allow delete: if isSitter() && collection == 'events' && resource.data.byUid == request.auth.uid;
+      }
+
+      // Sitter invites. The invite (name and dates) can be fetched by anyone signed in who knows its long random id;
+      // the PIN lives in a separate owner-only document, so knowing the link is not enough.
+      match /invites/{inviteId} {
+        allow get: if validHid() && signedIn() && inviteId.size() >= 16;
+        allow list: if isOwner();
+        allow create, update: if isOwner() && inviteId.size() >= 16
+          && request.resource.data.keys().hasOnly(['name', 'startsAt', 'expiresAt', 'createdAt'])
+          && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 40
+          && request.resource.data.startsAt is timestamp && request.resource.data.expiresAt is timestamp
+          && request.resource.data.expiresAt > request.resource.data.startsAt;
+        allow delete: if isOwner();
+      }
+      match /invitePins/{inviteId} {
+        allow read, delete: if isOwner();
+        allow create, update: if isOwner() && inviteId.size() >= 16
+          && request.resource.data.keys().hasOnly(['pin'])
+          && request.resource.data.pin is string && request.resource.data.pin.matches('[0-9]{6}');
       }
 
       // Who is an owner. The first Google account to arrive creates this list (containing itself);
@@ -57,6 +109,7 @@ service cloud.firestore {
         // You can read your own record (to learn your role); owners can read everyone's.
         allow read: if validHid() && signedIn() && (request.auth.uid == uid || isOwner());
         // An owner claims their own record, if their verified Google email is on the owners list.
+        allow create: if validHid() && signedIn() && request.auth.uid == uid && sitterClaim();
         allow create: if validHid() && googleEmail() && request.auth.uid == uid
           && exists(ownersPath())
           && myEmail() in get(ownersPath()).data.emails
