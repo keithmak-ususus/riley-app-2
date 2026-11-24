@@ -11,14 +11,32 @@ export const SOURCES = {
   kate: { name: "Riley's puppy plan", url: null },
   log: { name: "Based on your log", url: null },
   purdue: { name: "Purdue Canine Welfare", url: "https://caninewelfare.centers.purdue.edu/wp-content/uploads/2021/11/Puppy-Socialization.pdf" },
+  phc: { name: "Pet Health Club – Puppy Priorities checklist", url: "https://pethealthclub.com" },
   worm: { name: "Vetscriptions guide – always follow your vet", url: "https://www.vetscriptions.co.uk/blogs/puppy-kitten-care/how-often-should-puppies-be-wormed" },
 };
 
 export const NAME_LEVELS = ["Quiet room", "Toys on the floor", "Garden", "Out and about"];
-export const SOCIAL_ITEMS = [
-  "New people", "Children", "Healthy, vaccinated dog", "Traffic & sirens", "Hoover & household noise",
-  "New surfaces", "Car / bus / train", "Handling paws, ears, mouth", "Grooming & brushing", "Vet or vet nurse",
+// Socialisation checklist, grouped after the Pet Health Club "Puppy Priorities" checklist.
+// `once` items are one-off experiences (tick only); the rest can be logged again and again.
+const g = (id, title, items, once = []) => ({ id, title, items: items.map((label) => ({ label, once: once.includes(label) })) });
+export const SOCIAL_GROUPS = [
+  g("people", "People", ["Children", "Adults", "Visitors", "Toddlers", "Babies", "Delivery workers", "Joggers", "Loud people", "Shy people",
+    "People with beards", "Hats", "Motorbike helmets", "High-vis vests", "Crowds", "Police"]),
+  g("animals", "Animals", ["Adult dogs", "Puppies", "Cats", "Small pets", "Ducks/Swans/Geese", "Chickens", "Cattle", "Sheep", "Horses"]),
+  g("traffic", "Traffic & movement", ["Bicycles", "Cars/Vans", "Motorbikes", "Lorries", "Skateboards/Scooters", "Pushchairs", "Wheelchairs",
+    "Sirens", "Walking frames", "Walking sticks"]),
+  g("places", "Places & experiences", ["Vets", "Parks", "Country walks", "Ponds/Rivers", "Playgrounds", "Outside schools", "Sports events",
+    "Boarding kennels", "Friends’ houses", "Restaurants/Cafés", "High streets", "Pubs/Shops", "Grooming salons", "Parties", "New surfaces", "Car / bus / train"],
+    ["Sports events", "Boarding kennels", "Grooming salons", "Parties"]),
+  g("noises", "Household noises", ["Vacuum cleaner", "Hairdryer", "Doorbell/Knock", "TV", "Music", "Alarms"]),
+  g("handled", "Being handled", ["Looking in mouth", "Looking in ears", "Holding muzzle", "Nail clipping", "Teeth cleaning", "Brushing", "Wiping paws"]),
+  g("alone", "Alone time", ["In a crate", "Inside a room alone"]),
 ];
+export const SOCIAL_ITEMS = SOCIAL_GROUPS.flatMap((x) => x.items.map((i) => i.label));
+// Entries logged before the grouped list used these names.
+const SOCIAL_ALIASES = { "New people": "Adults", "Healthy, vaccinated dog": "Adult dogs", "Traffic & sirens": "Cars/Vans",
+  "Hoover & household noise": "Vacuum cleaner", "Vet or vet nurse": "Vets", "Grooming & brushing": "Brushing" };
+export const socialName = (item) => SOCIAL_ALIASES[item] || item;
 
 // Meals a day by age (Blue Cross: 4 until 4 months, 3 until 6 months, then 2; toy breeds often keep 3 longer).
 export function recommendedMeals(weeks, size) {
@@ -142,6 +160,14 @@ export function coach(c) {
     }
     if (weeks >= 8 && weeks < 11) add({ id: "train-fear-period", area: "training", level: "info", title: "Fear period (around 8–10 weeks)",
       body: "Keep new experiences gentle and positive. One bad experience can stick, so let him watch from a distance first.", source: SOURCES.purdue });
+    if (weeks <= 26) {
+      const seen = new Set(social.map((s) => socialName(s.item)));
+      const gaps = SOCIAL_GROUPS.map((x) => ({ title: x.title, n: x.items.filter((i) => seen.has(i.label)).length, of: x.items.length }))
+        .filter((x) => x.n < x.of).sort((a, b) => a.n / a.of - b.n / b.of).slice(0, 2);
+      if (gaps.length) add({ id: "train-social-gaps", area: "training", level: "info", title: "Still to meet on the checklist",
+        body: `Least ticked so far: ${gaps.map((x) => `${x.title} (${x.n} of ${x.of})`).join(" and ")}. Little and often, at ${name}’s own pace, with treats.`,
+        source: SOURCES.phc, action: { label: "Open the checklist", tab: "train" } });
+    }
     const unsure = social.filter((s) => s.reaction === "unsure" && now - s.at < 3 * DAY).pop();
     if (unsure) add({ id: `train-unsure-${unsure.id}`, area: "training", level: "do", title: `He was unsure with "${unsure.item}" – go slower`,
       body: "Next time, add more distance, keep it shorter and pair it with food. Watch for lip licking, yawning, a tucked tail or a lowered body.", source: SOURCES.purdue });
