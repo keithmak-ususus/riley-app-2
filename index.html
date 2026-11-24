@@ -177,11 +177,22 @@ svg.chart { width: 100%; height: 120px; display: block; }
 .levels span { flex: 1; text-align: center; font-size: 11px; padding: 6px 2px; border-radius: 8px; background: var(--bg); color: var(--muted); }
 .levels span.on { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
 .levels span.done { background: var(--ok-bg); color: var(--ok); }
-.social { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-.social button { background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 10px; min-height: 44px; text-align: left;
-  font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; gap: 6px; align-items: center; }
-.social button b { background: var(--card); border-radius: var(--r-pill); padding: 1px 8px; font-size: 12px; }
-.social button.seen { border-color: var(--ok); }
+#socialGroups { margin-top: 10px; display: grid; gap: 8px; }
+.sgroup { background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-ctl); }
+.sgroup summary { min-height: 44px; padding: 0 12px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 15px; cursor: pointer; }
+.sgroup summary b { background: var(--card); border-radius: var(--r-pill); padding: 1px 8px; font-size: 12px; }
+.slist { display: grid; gap: 4px; padding: 0 8px 8px; }
+.chkrow { display: flex; gap: 6px; }
+.stick { flex: 1; min-height: 44px; display: flex; align-items: center; gap: 10px; text-align: left; font-size: 14px; font-weight: 600;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 6px 10px; }
+.stick i { flex: none; width: 24px; height: 24px; border: 2px solid var(--muted); border-radius: 6px; display: grid; place-items: center; font-style: normal; font-weight: 800; }
+.stick span { flex: 1; }
+.stick b { background: var(--bg); border-radius: var(--r-pill); padding: 1px 8px; font-size: 12px; }
+.stick em { font-style: normal; font-size: 12px; color: var(--muted); }
+.stick.seen { border-color: var(--ok); }
+.stick.seen i { background: var(--ok); border-color: var(--ok); color: var(--card); }
+.stick.unsure i { border-color: var(--accent); color: var(--accent); }
+.sminus { flex: none; width: 44px; min-height: 44px; font-size: 20px; background: var(--card); border: 1px solid var(--line); border-radius: var(--r-ctl); }
 .hist { margin-top: 10px; font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
 .check { display: flex; align-items: center; gap: 8px; font-size: 15px; min-height: 44px; }
 .check input { width: 24px; height: 24px; }
@@ -535,13 +546,8 @@ body:not(.sitter) .sitter-only, body.sitter .owner-only { display: none !importa
 
       <h2>Socialisation</h2>
       <div class="card">
-        <div class="muted" style="font-size:14px">Tap when he meets something new. Keep it short and positive, and pair it with food.</div>
-        <div class="social" id="socialGrid"></div>
-        <div class="sheet hidden" id="socialSheet" style="grid-template-columns:1fr 1fr 1fr">
-          <button data-r="happy" style="background:var(--ok-bg);color:var(--ok)">😊 Happy</button>
-          <button data-r="unsure">😟 Unsure</button>
-          <button class="cancel" data-r="">Cancel</button>
-        </div>
+        <div class="muted" style="font-size:14px">Tick off what he has met. Either of you can tick, and repeats count. Keep it short and positive, and pair it with food. Tap “Unsure” on the message if he wasn’t happy.</div>
+        <div id="socialGroups"></div>
       </div>
     </section>
 
@@ -725,6 +731,6 @@ body:not(.sitter) .sitter-only, body.sitter .owner-only { display: none !importa
   </div>
 </div>
 
-<script type="module" src="app.js?v=f6cecbb5"></script>
+<script type="module" src="app.js?v=6b1355a7"></script>
 </body>
 </html>

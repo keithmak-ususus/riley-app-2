@@ -1,7 +1,7 @@
-import { openStore, DEMO } from "./store.js?v=f6cecbb5";
-import { defaults } from "./config.js?v=f6cecbb5";
-import { coach, NAME_LEVELS, SOCIAL_ITEMS } from "./coach.js?v=f6cecbb5";
-import { compressPhoto } from "./photos.js?v=f6cecbb5";
+import { openStore, DEMO } from "./store.js?v=6b1355a7";
+import { defaults } from "./config.js?v=6b1355a7";
+import { coach, NAME_LEVELS, SOCIAL_GROUPS, socialName } from "./coach.js?v=6b1355a7";
+import { compressPhoto } from "./photos.js?v=6b1355a7";
 
 const $ = (s) => document.querySelector(s);
 const ls = { get: (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
@@ -872,26 +872,54 @@ function renderTrain() {
   $("#crateHist").innerHTML = hist(crate, (s) => `<b>${s.minutes} min</b>${s.whined ? " · whined" : " · calm"}`);
   if (!$("#crateMin").value && crate.length) $("#crateMin").value = crate[crate.length - 1].minutes;
 
-  const social = sess("social");
-  const grid = $("#socialGrid"); grid.innerHTML = "";
-  for (const item of SOCIAL_ITEMS) {
-    const n = social.filter((s) => s.item === item).length;
-    const b = document.createElement("button");
-    b.className = n ? "seen" : "";
-    b.innerHTML = `<span>${esc(item)}</span><b>${n}</b>`;
-    b.onclick = () => openSocial(item);
-    grid.append(b);
+  renderSocial(sess("social"));
+}
+// Socialisation checklist. One tap ticks an item (logged as happy); repeatable items count up. Both owners share it.
+const socialOpen = new Set(["people"]);
+function renderSocial(social) {
+  const by = {};
+  for (const s of social) (by[socialName(s.item)] ||= []).push(s);
+  const root = $("#socialGroups"); root.innerHTML = "";
+  for (const grp of SOCIAL_GROUPS) {
+    const done = grp.items.filter((i) => by[i.label]).length;
+    const d = document.createElement("details"); d.className = "sgroup"; d.open = socialOpen.has(grp.id);
+    d.ontoggle = () => { d.open ? socialOpen.add(grp.id) : socialOpen.delete(grp.id); };
+    d.innerHTML = `<summary><span>${esc(grp.title)}</span><b>${done} of ${grp.items.length}</b></summary>`;
+    const list = document.createElement("div"); list.className = "slist";
+    for (const it of grp.items) {
+      const rows = by[it.label] || [], n = rows.length, unsure = n && rows[rows.length - 1].reaction === "unsure";
+      const row = document.createElement("div"); row.className = "chkrow";
+      const main = document.createElement("button");
+      main.className = "stick" + (n ? (unsure ? " unsure" : " seen") : "");
+      main.setAttribute("role", "checkbox"); main.setAttribute("aria-checked", n ? "true" : "false");
+      main.innerHTML = `<i aria-hidden="true">${n ? (unsure ? "?" : "✓") : ""}</i><span>${esc(it.label)}</span>` +
+        (n > 1 ? `<b>${n}×</b>` : "") + (unsure ? `<em>go slower</em>` : "");
+      main.onclick = () => (n && it.once ? socialUntick(it.label, rows) : socialTick(it.label, rows));
+      row.append(main);
+      if (n && !it.once) {
+        const less = document.createElement("button"); less.className = "sminus"; less.textContent = "−";
+        less.setAttribute("aria-label", `Remove the last ${it.label} entry`);
+        less.onclick = () => socialUntick(it.label, rows); row.append(less);
+      }
+      list.append(row);
+    }
+    d.append(list); root.append(d);
   }
 }
-let socialItem = null;
-function openSocial(item) { socialItem = item; const s = $("#socialSheet"); s.classList.remove("hidden"); s.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
-$("#socialSheet").onclick = async (e) => {
-  const r = e.target.closest("button")?.dataset.r; if (r === undefined) return;
-  $("#socialSheet").classList.add("hidden");
-  if (!r || !socialItem) return;
-  await store.add("training", { skill: "social", item: socialItem, reaction: r, at: Date.now(), by: me });
-  toast(r === "happy" ? `😊 ${socialItem} – logged` : `😟 Logged – go slower next time: more distance, pair with food`, [], r === "happy" ? 4000 : 7000);
-};
+async function socialTick(item, rows) {
+  const e = await store.add("training", { skill: "social", item, reaction: "happy", at: Date.now(), by: me });
+  const id = e?.id || e;
+  toast(`😊 ${item} – ticked${rows.length ? ` (${rows.length + 1}×)` : ""}`, [
+    ["Unsure", async () => { if (id) { await store.update("training", id, { reaction: "unsure" }); toast("Logged – go slower next time: more distance, pair with food", [], 7000); } }],
+    ["Undo", () => id && store.remove("training", id)],
+  ], 6000);
+}
+async function socialUntick(item, rows) {
+  const last = rows[rows.length - 1]; if (!last) return;
+  await store.remove("training", last.id);
+  const { id, ...rest } = last;
+  toast(`${item} – removed`, [["Undo", () => store.add("training", rest)]]);
+}
 $("#nameScores").onclick = async (e) => {
   const s = e.target.closest("button")?.dataset.s; if (s === undefined) return;
   await store.add("training", { skill: "name", score: +s, level: shared.train?.nameLevel || 0, at: Date.now(), by: me });
